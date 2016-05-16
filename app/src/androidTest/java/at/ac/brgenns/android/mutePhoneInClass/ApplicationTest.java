@@ -1,4 +1,4 @@
-package com.unterhaus.wolfflo.mute_alpha;
+package at.ac.brgenns.android.mutePhoneInClass;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

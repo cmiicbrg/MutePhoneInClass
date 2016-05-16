@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Mute_alpha</string>
+    <string name="app_name">Mute Phone In Class</string>
     <string name="action_settings">Settings</string>
     <string name="wifi_select">Please select your wifi</string>
     <string name="cWifi">Current Wifi:</string>
