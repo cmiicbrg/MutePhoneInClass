@@ -38,7 +38,6 @@ public class Wifi_Service extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -50,7 +49,6 @@ public class Wifi_Service extends Service {
         super.onDestroy();
         // do clean up close threads reicevers
     }
-
 
     public void setSilentOrNormal() {
         WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);

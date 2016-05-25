@@ -20,7 +20,6 @@ import android.widget.Toast;
 
 import java.util.List;
 
-
 public class Mute_AlphaActivity extends AppCompatActivity implements Dialog.Delivery {
 
     public static final String SSID_PREFERENCES = "SSIDprefs";
@@ -67,7 +66,6 @@ public class Mute_AlphaActivity extends AppCompatActivity implements Dialog.Deli
         }
     }
 
-
     @Override
     protected void onStop() {
         super.onStop();
@@ -88,12 +86,10 @@ public class Mute_AlphaActivity extends AppCompatActivity implements Dialog.Deli
         return super.onOptionsItemSelected(item);
     }
 
-
     public void doDialog() {
         newFragment.iwosiwos = wifisFoundArray;
         newFragment.show(getSupportFragmentManager(), "dosth");
     }
-
 
     @Override
     public void onSelectItem(int i) {
@@ -105,7 +101,6 @@ public class Mute_AlphaActivity extends AppCompatActivity implements Dialog.Deli
         ssidEdit.apply();
         volume_state.setRingerMode(AudioManager.RINGER_MODE_SILENT);
     }
-
 
     public void setSilent() {
         for (int i = 0; i < wifisFoundList.size(); i++) {
@@ -119,9 +114,11 @@ public class Mute_AlphaActivity extends AppCompatActivity implements Dialog.Deli
 
     public void startAlarm() {
         Intent intent = new Intent(this, Receiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this.getApplicationContext(), 1337, intent, 0);
+        PendingIntent pendingIntent =
+                PendingIntent.getBroadcast(this.getApplicationContext(), 1337, intent, 0);
         AlarmManager alarm = (AlarmManager) getSystemService(ALARM_SERVICE);
-        alarm.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 180000, pendingIntent);
+        alarm.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 180000,
+                pendingIntent);
     }
 
     public void ScanWifi() {
@@ -132,7 +129,6 @@ public class Mute_AlphaActivity extends AppCompatActivity implements Dialog.Deli
             wifisFoundArray[i] = wifisFoundList.get(i).SSID;
         }
     }
-
 
 }
 

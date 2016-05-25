@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 
-
 /**
  * Created by User on 30.03.2016.
  */
@@ -14,10 +13,6 @@ public class Dialog extends DialogFragment {
 
     String[] iwosiwos;
     Delivery dialogListener;
-
-    public interface Delivery {
-        public void onSelectItem(int i);
-    }
 
     @Override
     public void onAttach(Activity activity) {
@@ -39,9 +34,12 @@ public class Dialog extends DialogFragment {
                         dialogListener.onSelectItem(i);
                     }
 
-
                 });
 
         return select_wifi.create();
+    }
+
+    public interface Delivery {
+        public void onSelectItem(int i);
     }
 }
