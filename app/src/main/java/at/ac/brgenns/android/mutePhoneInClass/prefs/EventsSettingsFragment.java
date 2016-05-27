@@ -5,12 +5,24 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 
+import java.util.TreeMap;
+
+import at.ac.brgenns.android.mutePhoneInClass.Dialog;
 import at.ac.brgenns.android.mutePhoneInClass.R;
+import at.ac.brgenns.android.mutePhoneInClass.prefs.db.PreferenceDataSource;
+import at.ac.brgenns.android.mutePhoneInClass.prefs.model.EventProvider;
+import at.ac.brgenns.android.mutePhoneInClass.prefs.model.WifiEvent;
 
 /**
  * Created by Christoph on 27.05.2016.
  */
-public class EventsSettingsFragment extends PreferenceFragment{
+public class EventsSettingsFragment extends PreferenceFragment implements
+        Dialog.SSIDChosenListener {
+    private PreferenceDataSource datasource;
+    private TreeMap<Long, WifiEvent> wifiEvents;
+    private TreeMap<Long, EventProvider> eventProviders;
+    private String[] ssidsFoundArray;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -21,12 +33,55 @@ public class EventsSettingsFragment extends PreferenceFragment{
     @Override
     public void onResume() {
         super.onResume();
+        datasource = new PreferenceDataSource(getActivity());
+        datasource.open();
+//        wifiEvents = datasource.getAllWifiEvents();
+//        eventProviders = datasource.getAllEventProviders();
+//        if (wifiEvents.size() == 0 && eventProviders.size() == 0) {
+//            WifiManager wifi = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
+//            wifi.startScan();
+//            List<ScanResult> wifisFoundList = wifi.getScanResults();
+//
+//            ssidsFoundArray = new String[wifisFoundList.size()];
+//            for (int i = 0; i < wifisFoundList.size(); i++) {
+//                ssidsFoundArray[i] = wifisFoundList.get(i).SSID;
+//            }
+//            Dialog dialog = new Dialog();
+//            dialog.setOptions(ssidsFoundArray);
+//            dialog.show(getFragmentManager(), "dosth");
+//        }
         buildUI();
+    }
+
+    @Override
+    public void onPause() {
+        datasource.close();
+        super.onPause();
     }
 
     private void buildUI() {
         final PreferenceScreen root = getPreferenceScreen();
         root.removeAll();
+        wifiEvents = datasource.getAllWifiEvents();
+        eventProviders = datasource.getAllEventProviders();
+        for (WifiEvent wifiEvent : wifiEvents.values()) {
+            final Preference p = new Preference(getActivity());
+            p.setIcon(R.drawable.ic_stat_name);
+            p.setTitle(wifiEvent.getSSID());
+            p.setSummary(wifiEvent.getSoundProfile().getName());
+            p.setPersistent(false);
+            p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    getFragmentManager().beginTransaction()
+                            .replace(R.id.main_content, new WifiSettingsFragment()).commit();
+//                    getContext().startActivity(new Intent(WifiSettingsFragment.class));
+                    return true;
+                }
+            });
+
+        }
+        //TODO add Eventproviders
         final Preference p = new Preference(getActivity());
         p.setIcon(R.drawable.ic_add_black_24dp);
         p.setTitle(R.string.add_rule);
@@ -34,11 +89,19 @@ public class EventsSettingsFragment extends PreferenceFragment{
         p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-//                MetricsLogger.action(mContext, MetricsLogger.ACTION_ZEN_ADD_RULE);
-//                showAddRuleDialog();
+                getFragmentManager().beginTransaction()
+                        .replace(R.id.main_content, new WifiSettingsFragment()).commit();
                 return true;
             }
         });
         root.addPreference(p);
+    }
+
+    @Override
+    public void onSelectItem(int i) {
+        //TODO
+        datasource.createWifiEvent(true, ssidsFoundArray[i], "", null, null,
+                datasource.getAllSoundProfiles().get(0));
+        buildUI();
     }
 }

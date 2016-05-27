@@ -42,17 +42,17 @@ public class MPICSQLiteHelper extends SQLiteOpenHelper {
     public static final String EVENT_END = "end";
     public static final String EVENT_EVENT_PROVIDER = EVENT_PROVIDER + "_" + EVENT_PROVIDER_ID;
     private static final String DATABASE_NAME = "mpic.db";
-    private static final int DATABASE_VERSION = 2;
-    private static final String DATABASE_CREATE = "CREATE TABLE " + SOUND_PROFILE + " (\n" +
+    private static final int DATABASE_VERSION = 1;
+    private static final String SOUND_CREATE = "CREATE TABLE " + SOUND_PROFILE + " (\n" +
             "  " + SOUND_PROFILE_ID + " INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE ,\n" +
             "  " + SOUND_PROFILE_NAME + " VARCHAR NOT NULL ,\n" +
             "  " + SOUND_PROFILE_MEDIA_VOLUME + " INTEGER NOT NULL ,\n" +
-            "  " + SOUND_PROFILE_ALARM_VOLUME + " INTEGER NOT NULL ,\n" +
+            "  " + SOUND_PROFILE_ALARM_VOLUME + " INTEGER NOT NULL,\n" +
             "  " + SOUND_PROFILE_RING_VOLUME + " INTEGER NOT NULL ,\n" +
             "  " + SOUND_PROFILE_VIBRATE + " INTEGER NOT NULL \n" +
             ");\n" +
-            "\n" +
-            "CREATE TABLE " + WIFI_EVENT + " (\n" +
+            "\n";
+    private static final String WIFI_CREATE = "CREATE TABLE " + WIFI_EVENT + " (\n" +
             "  " + WIFI_EVENT_ID + " INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE ,\n" +
             "  " + WIFI_EVENT_ACTIVE + " INTEGER NOT NULL ,\n" +
             "  " + WIFI_EVENT_SSID + " VARCHAR NOT NULL ,\n" +
@@ -63,27 +63,28 @@ public class MPICSQLiteHelper extends SQLiteOpenHelper {
             "  FOREIGN KEY (" + WIFI_EVENT_SOUND_PROFILE + ") REFERENCES " + SOUND_PROFILE + " (" +
             SOUND_PROFILE_ID + ")\n" +
             ");\n" +
-            "\n" +
-            "CREATE TABLE " + EVENT_PROVIDER + " (\n" +
+            "\n";
+    private static final String EVENT_PROVIDER_CREATE = "CREATE TABLE " + EVENT_PROVIDER + " (\n" +
             "  " + EVENT_PROVIDER_ID + " INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE ,\n" +
             "  " + EVENT_PROVIDER_ACTIVE + " INTEGER NOT NULL ,\n" +
             "  " + EVENT_PROVIDER_TYPE + " VARCHAR NOT NULL ,\n" +
             "  " + EVENT_PROVIDER_URL + " TEXT NOT NULL , \n" +
-            "  " + EVENT_PROVIDER_CLASS_NAME + " VARCHAR,\n" +
+            "  " + EVENT_PROVIDER_CLASS_NAME + " VARCHAR ,\n" +
             "  " + EVENT_PROVIDER_SOUND_PROFILE + " INTEGER NOT NULL ,\n" +
             "  FOREIGN KEY (" + EVENT_PROVIDER_SOUND_PROFILE + ") REFERENCES " + SOUND_PROFILE +
             " (" + SOUND_PROFILE_ID + ")\n" +
             ");\n" +
-            "\n" +
-            "CREATE TABLE " + EVENT + " (\n" +
+            "\n";
+    private static final String EVENT_CREATE = "CREATE TABLE " + EVENT + " (\n" +
             "  " + EVENT_ID + " INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE ,\n" +
             "  " + EVENT_BEGIN + " VARCHAR NOT NULL ,\n" +
             "  " + EVENT_END + " VARCHAR NOT NULL ,\n" +
-            "  " + EVENT_EVENT_PROVIDER + " INTEGER NOT NULL,\n" +
+            "  " + EVENT_EVENT_PROVIDER + " INTEGER NOT NULL ,\n" +
             "  FOREIGN KEY (" + EVENT_EVENT_PROVIDER + ") REFERENCES " + EVENT_PROVIDER + "(" +
             EVENT_PROVIDER_ID + ")\n" +
             ");\n" +
             "\n";
+
     private Context context;
 
     public MPICSQLiteHelper(Context context) {
@@ -93,14 +94,34 @@ public class MPICSQLiteHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(DATABASE_CREATE);
+        db.execSQL(SOUND_CREATE);
+        db.execSQL(WIFI_CREATE);
+        db.execSQL(EVENT_PROVIDER_CREATE);
+        db.execSQL(EVENT_CREATE);
         ContentValues values = new ContentValues();
-        values.put(SOUND_PROFILE_NAME, context.getString(R.string.default_sound_profile));
+        values.put(SOUND_PROFILE_ID, 0);
+        values.put(SOUND_PROFILE_NAME, context.getString(R.string.alarms_only));
+        values.put(SOUND_PROFILE_MEDIA_VOLUME, 0);
+        values.put(SOUND_PROFILE_ALARM_VOLUME, -1);
+        values.put(SOUND_PROFILE_RING_VOLUME, 0);
+        values.put(SOUND_PROFILE_VIBRATE, 0);
+        db.insert(SOUND_PROFILE, null, values);
+        values = new ContentValues();
+        values.put(SOUND_PROFILE_ID, 1);
+        values.put(SOUND_PROFILE_NAME, context.getString(R.string.total_silence));
         values.put(SOUND_PROFILE_MEDIA_VOLUME, 0);
         values.put(SOUND_PROFILE_ALARM_VOLUME, 0);
         values.put(SOUND_PROFILE_RING_VOLUME, 0);
         values.put(SOUND_PROFILE_VIBRATE, 0);
         db.insert(SOUND_PROFILE, null, values);
+//        values = new ContentValues();
+//        values.put(WIFI_EVENT_ACTIVE, 1);
+//        values.put(WIFI_EVENT_SSID, "ChriMarg");
+//        values.put(WIFI_EVENT_DAYS, "");
+//        values.put(WIFI_EVENT_STARTTIME, "");
+//        values.put(WIFI_EVENT_ENDTIME, "");
+//        values.put(WIFI_EVENT_SOUND_PROFILE, 0);
+//        db.insert(WIFI_EVENT, null, values);
     }
 
     @Override

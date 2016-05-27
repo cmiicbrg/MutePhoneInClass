@@ -1,5 +1,6 @@
 package at.ac.brgenns.android.mutePhoneInClass;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -20,7 +21,7 @@ import android.widget.Toast;
 
 import java.util.List;
 
-public class MuteActivity extends AppCompatActivity implements Dialog.Delivery {
+public class MuteActivity extends Activity implements Dialog.SSIDChosenListener {
 
     public static final String SSID_PREFERENCES = "SSIDprefs";
     String wifisFoundArray[];
@@ -36,7 +37,7 @@ public class MuteActivity extends AppCompatActivity implements Dialog.Delivery {
         setContentView(R.layout.activity_mute__alpha);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+//        setSupportActionBar(toolbar);
         TextView ssid = (TextView) findViewById(R.id.ssid_found);
         Button change = (Button) findViewById(R.id.button);
 
@@ -87,8 +88,8 @@ public class MuteActivity extends AppCompatActivity implements Dialog.Delivery {
     }
 
     public void doDialog() {
-        newFragment.iwosiwos = wifisFoundArray;
-        newFragment.show(getSupportFragmentManager(), "dosth");
+        newFragment.setOptions(wifisFoundArray);
+        newFragment.show(getFragmentManager(), "dosth");
     }
 
     @Override

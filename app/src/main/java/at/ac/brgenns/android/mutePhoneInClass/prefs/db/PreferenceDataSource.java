@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -18,6 +19,7 @@ import at.ac.brgenns.android.mutePhoneInClass.prefs.model.EventProvider;
 import at.ac.brgenns.android.mutePhoneInClass.prefs.model.SoundProfile;
 import at.ac.brgenns.android.mutePhoneInClass.prefs.model.WifiEvent;
 
+import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.EVENT;
 import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.EVENT_BEGIN;
 import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.EVENT_END;
 import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.EVENT_EVENT_PROVIDER;
@@ -35,6 +37,7 @@ import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.S
 import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.SOUND_PROFILE_NAME;
 import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.SOUND_PROFILE_RING_VOLUME;
 import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.SOUND_PROFILE_VIBRATE;
+import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.WIFI_EVENT;
 import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.WIFI_EVENT_ACTIVE;
 import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.WIFI_EVENT_DAYS;
 import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.WIFI_EVENT_ENDTIME;
@@ -125,6 +128,61 @@ public class PreferenceDataSource {
         return soundProfiles;
     }
 
+    public WifiEvent createWifiEvent(WifiEvent wifiEvent) {
+        if (!wifiEvent.hasId()) {
+            ContentValues values = getContentValues(wifiEvent);
+            wifiEvent.setWifiID(database.insert(WIFI_EVENT, null, values));
+        }
+        return wifiEvent;
+    }
+
+    public WifiEvent createWifiEvent(boolean active, String SSID, String days,
+                                        Date starttime, Date endtime, SoundProfile soundProfile) {
+        WifiEvent wifiEvent =
+                new WifiEvent(active, SSID, days,
+                        starttime, endtime, soundProfile);
+        return createWifiEvent(wifiEvent);
+    }
+
+    public TreeMap<Long, WifiEvent> getAllWifiEvents() {
+        TreeMap<Long, WifiEvent> wifiEvents = new TreeMap();
+
+        SQLiteCursor cursor = (SQLiteCursor) database
+                .query(WIFI_EVENT, wifiEventColumns, null, null, null, null, null);
+
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            WifiEvent wifiEvent = getWifiEvent(cursor);
+            wifiEvents.put(wifiEvent.getWifiID(), wifiEvent);
+            cursor.moveToNext();
+        }
+
+        cursor.close();
+        return wifiEvents;
+    }
+
+    private WifiEvent getWifiEvent(SQLiteCursor cursor) {
+        WifiEvent wifiEvent = new WifiEvent();
+        wifiEvent.setWifiID(cursor.getLong(cursor.getColumnIndex(WIFI_EVENT_ID)));
+        wifiEvent.setActive(
+                cursor.getInt(cursor.getColumnIndex(WIFI_EVENT_ACTIVE)) == 1 ? true : false);
+        wifiEvent.setSSID(cursor.getString(cursor.getColumnIndex(WIFI_EVENT_SSID)));
+        wifiEvent.setDays(cursor.getString(cursor.getColumnIndex(WIFI_EVENT_DAYS)));
+        wifiEvent.setStarttime(
+                fromTimeString(cursor.getString(cursor.getColumnIndex(WIFI_EVENT_STARTTIME))));
+        wifiEvent.setEndtime(
+                fromTimeString(cursor.getString(cursor.getColumnIndex(WIFI_EVENT_ENDTIME))));
+        //TODO: write method for retrieving a single Soundprofile
+        wifiEvent.setSoundProfile(getAllSoundProfiles()
+                .get(cursor.getInt(cursor.getColumnIndex(WIFI_EVENT_SOUND_PROFILE))));
+        return wifiEvent;
+    }
+
+    public TreeMap<Long, EventProvider> getAllEventProviders() {
+
+        return new TreeMap<>();
+    }
+
     @NonNull
     private SoundProfile getSoundProfile(Cursor cursor) {
         SoundProfile soundProfile = new SoundProfile();
@@ -198,6 +256,18 @@ public class PreferenceDataSource {
         return dateFormat.format(date);
     }
 
+    private Date fromDateString(String str) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        Date convertedDate = new Date();
+        try {
+            convertedDate = dateFormat.parse(str);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return convertedDate;
+    }
+
     /**
      * get datetime
      */
@@ -206,4 +276,17 @@ public class PreferenceDataSource {
                 "HH:mm", Locale.getDefault());
         return dateFormat.format(date);
     }
+
+    private Date fromTimeString(String str) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(
+                "HH:mm", Locale.getDefault());
+        Date convertedDate = new Date();
+        try {
+            convertedDate = dateFormat.parse(str);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return convertedDate;
+    }
+
 }

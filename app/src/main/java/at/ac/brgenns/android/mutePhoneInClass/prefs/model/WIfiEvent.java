@@ -6,13 +6,28 @@ import java.util.Date;
  * Created by Christoph on 16.05.2016.
  */
 public class WifiEvent {
-    private long wifiID;
+    private long wifiID = -1;
     private boolean active;
     private String SSID;
     private String days;
     private Date starttime;
     private Date endtime;
     private SoundProfile soundProfile;
+
+    public WifiEvent(boolean active, String ssid, String days,
+                     Date starttime, Date endtime,
+                     SoundProfile soundProfile) {
+        setActive(active);
+        setSSID(ssid);
+        setDays(days);
+        setStarttime(starttime);
+        setEndtime(endtime);
+        setSoundProfile(soundProfile);
+    }
+
+    public WifiEvent() {
+
+    }
 
     public long getWifiID() {
         return wifiID;
@@ -68,5 +83,9 @@ public class WifiEvent {
 
     public void setSoundProfile(SoundProfile soundProfile) {
         this.soundProfile = soundProfile;
+    }
+
+    public boolean hasId() {
+        return wifiID > -1;
     }
 }

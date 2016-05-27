@@ -6,16 +6,16 @@ import android.preference.PreferenceActivity;
 
 import java.util.List;
 
+import at.ac.brgenns.android.mutePhoneInClass.Dialog;
 import at.ac.brgenns.android.mutePhoneInClass.R;
 
-public class MuteSettingsActivity extends PreferenceActivity {
+public class MuteSettingsActivity extends PreferenceActivity implements Dialog.SSIDChosenListener{
     List<ScanResult> wifisFoundList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mute_settings);
-
     }
 
     @Override
@@ -24,4 +24,8 @@ public class MuteSettingsActivity extends PreferenceActivity {
                 EventsSettingsFragment.class.equals(fragmentName);
     }
 
+    @Override
+    public void onSelectItem(int i) {
+
+    }
 }

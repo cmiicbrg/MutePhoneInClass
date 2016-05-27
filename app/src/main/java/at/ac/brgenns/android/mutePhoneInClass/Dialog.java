@@ -4,23 +4,23 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
+import android.app.DialogFragment;
 
 /**
  * Created by User on 30.03.2016.
  */
 public class Dialog extends DialogFragment {
 
-    String[] iwosiwos;
-    Delivery dialogListener;
+    private String[] iwosiwos;
+    private SSIDChosenListener dialogListener;
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            dialogListener = (Delivery) activity;
+            dialogListener = (SSIDChosenListener) activity;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString() + "must implement Delivery");
+            throw new ClassCastException(activity.toString() + "must implement SSIDChosenListener");
         }
     }
 
@@ -39,7 +39,11 @@ public class Dialog extends DialogFragment {
         return select_wifi.create();
     }
 
-    public interface Delivery {
+    public void setOptions(String[] ssids) {
+        iwosiwos = ssids;
+    }
+
+    public interface SSIDChosenListener {
         public void onSelectItem(int i);
     }
 }
