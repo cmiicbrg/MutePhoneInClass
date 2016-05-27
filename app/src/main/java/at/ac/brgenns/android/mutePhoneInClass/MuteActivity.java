@@ -20,7 +20,7 @@ import android.widget.Toast;
 
 import java.util.List;
 
-public class Mute_AlphaActivity extends AppCompatActivity implements Dialog.Delivery {
+public class MuteActivity extends AppCompatActivity implements Dialog.Delivery {
 
     public static final String SSID_PREFERENCES = "SSIDprefs";
     String wifisFoundArray[];

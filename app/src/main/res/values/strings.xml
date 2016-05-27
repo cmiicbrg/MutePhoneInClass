@@ -13,4 +13,9 @@
     <string name="no_wifi_chosen">None</string>
     <string name="rule_name_default">Default</string>
     <string name="rule_name_title">Rule name</string>
+    <string name="total_silence">Total silence</string>
+    <string name="sound_profile_title">Sound profile</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="alarms_only">Alarms only</string>
+    <string name="add_rule">Add rule</string>
 </resources>

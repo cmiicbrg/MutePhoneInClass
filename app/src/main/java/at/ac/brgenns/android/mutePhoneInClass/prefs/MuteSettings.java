@@ -9,7 +9,7 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
 /**
  * Created by Christoph on 27.05.2016.
  */
-public class EventSettings extends PreferenceFragment {
+public class MuteSettings extends PreferenceFragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -18,7 +18,7 @@ public class EventSettings extends PreferenceFragment {
     }
 
     void createUI() {
-        addPreferencesFromResource(R.xml.event_settings);
+        addPreferencesFromResource(R.xml.mute_settings);
         PreferenceScreen preferenceScreen = (PreferenceScreen) findPreference("event");
 
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="sound_profile">
+        <item>@string/alarms_only</item>
+        <item>@string/total_silence</item>
+    </string-array>
+    <string-array name="ssids">
+        <item>ChriMarg</item>
+        <item>ChriMargB</item>
+    </string-array>
+    <string-array name="listvalues">
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+</resources>
