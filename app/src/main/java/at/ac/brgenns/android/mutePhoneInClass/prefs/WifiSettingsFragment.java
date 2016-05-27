@@ -10,15 +10,6 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
  */
 public class WifiSettingsFragment extends PreferenceFragment {
 
-//    public WifiSettingsFragment() {
-//    }
-//
-//    @Override
-//    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-//                             Bundle savedInstanceState) {
-//        return inflater.inflate(R.layout.fragment_settings, container, false);
-//    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
