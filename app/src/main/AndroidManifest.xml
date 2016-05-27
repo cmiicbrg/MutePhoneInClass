@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="at.ac.brgenns.android.mutePhoneInClass">
 
-
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -11,20 +10,31 @@
 
     <uses-feature android:name="android.hardware.wifi" />
 
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <service
-            android:name="at.ac.brgenns.android.mutePhoneInClass.Wifi_Service"
+            android:name=".Wifi_Service"
             android:exported="false" />
-        <receiver android:name="at.ac.brgenns.android.mutePhoneInClass.Receiver"></receiver>
+
+        <receiver android:name=".Receiver" />
         <activity
-            android:name="at.ac.brgenns.android.mutePhoneInClass.Mute_AlphaActivity"
+            android:name=".prefs.MPICPrefs"
+            android:label="@string/title_activity_mpicprefs"
+            android:theme="@style/AppTheme.NoActionBar">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".Mute_AlphaActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>

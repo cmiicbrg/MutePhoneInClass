@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:key="wifi_event_settings"
+                  android:title="@string/wifi_event_settings">
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="enable"
+        android:title="On"/>
+    <EditTextPreference
+        android:key="rule_name"
+        android:summary="@string/rule_name_default"
+        android:title="@string/rule_name_title"/>
+    <ListPreference
+        android:key="ssid"
+        android:summary="@string/no_wifi_chosen"
+        android:title="@string/mute_on_wifi"/>
+
+
+</PreferenceScreen>

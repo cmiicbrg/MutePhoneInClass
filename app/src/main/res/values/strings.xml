@@ -4,5 +4,13 @@
     <string name="wifi_select">Please select your wifi</string>
     <string name="cWifi">Current Wifi:</string>
     <string name="cnWifi">Click to choose new wifi</string>
-
+    <string name="title_activity_mpicprefs">Mute phone in class prefs</string>
+    <string name="default_sound_profile">Default</string>
+    <string name="events"/>
+    <string name="wifi_event_settings">Mute if Wifi is available</string>
+    <string name="choose_wifi">Choose Wifi</string>
+    <string name="mute_on_wifi">Mute on Wifi</string>
+    <string name="no_wifi_chosen">None</string>
+    <string name="rule_name_default">Default</string>
+    <string name="rule_name_title">Rule name</string>
 </resources>
