@@ -1,27 +1,25 @@
 package at.ac.brgenns.android.mutePhoneInClass.prefs;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 
-import java.util.TreeMap;
+import java.util.HashSet;
+import java.util.Set;
 
-import at.ac.brgenns.android.mutePhoneInClass.FirstRunSSIDChooser;
 import at.ac.brgenns.android.mutePhoneInClass.R;
-import at.ac.brgenns.android.mutePhoneInClass.prefs.db.PreferenceDataSource;
-import at.ac.brgenns.android.mutePhoneInClass.prefs.model.EventProvider;
-import at.ac.brgenns.android.mutePhoneInClass.prefs.model.WifiEvent;
 
 /**
  * Created by Christoph on 27.05.2016.
  */
-public class EventsSettingsFragment extends PreferenceFragment implements
-        FirstRunSSIDChooser.SSIDChosenListener {
-    private PreferenceDataSource datasource;
-    private TreeMap<Long, WifiEvent> wifiEvents;
-    private TreeMap<Long, EventProvider> eventProviders;
-    private String[] ssidsFoundArray;
+public class EventsSettingsFragment extends PreferenceFragment {
+//    private PreferenceDataSource datasource;
+//    private TreeMap<Long, WifiEvent> wifiEvents;
+//    private TreeMap<Long, EventProvider> eventProviders;
+//    private String[] ssidsFoundArray;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -33,8 +31,8 @@ public class EventsSettingsFragment extends PreferenceFragment implements
     @Override
     public void onResume() {
         super.onResume();
-        datasource = new PreferenceDataSource(getActivity());
-        datasource.open();
+//        datasource = new PreferenceDataSource(getActivity());
+//        datasource.open();
 //        wifiEvents = datasource.getAllWifiEvents();
 //        eventProviders = datasource.getAllEventProviders();
 //        if (wifiEvents.size() == 0 && eventProviders.size() == 0) {
@@ -55,32 +53,40 @@ public class EventsSettingsFragment extends PreferenceFragment implements
 
     @Override
     public void onPause() {
-        datasource.close();
+//        datasource.close();
         super.onPause();
     }
 
     private void buildUI() {
         final PreferenceScreen root = getPreferenceScreen();
         root.removeAll();
-        wifiEvents = datasource.getAllWifiEvents();
-        eventProviders = datasource.getAllEventProviders();
-        for (WifiEvent wifiEvent : wifiEvents.values()) {
+//        wifiEvents = datasource.getAllWifiEvents();
+//        eventProviders = datasource.getAllEventProviders();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        Set<String> IDs = prefs.getStringSet(MuteSettingsActivity.RULES_KEY, new HashSet<String>());
+
+        for (final String id : IDs) {
             final Preference p = new Preference(getActivity());
-            p.setIcon(R.drawable.ic_stat_name);
-            p.setTitle(wifiEvent.getSSID());
-            p.setSummary(wifiEvent.getSoundProfile().getName());
+            p.setIcon(R.mipmap.ic_stat_name);
+            p.setTitle(prefs.getString("ssid" + "_" + id, ""));
+            String soundProfile_id = prefs.getString("soundProfile" + "_" + id, "0");
+            p.setSummary(getResources().getStringArray(R.array.sound_profiles)[Integer
+                    .parseInt(soundProfile_id)]);
             p.setPersistent(false);
             p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
+                    WifiSettingsFragment fragment = new WifiSettingsFragment();
+                    fragment.id = id;
                     getFragmentManager().beginTransaction()
-                            .replace(R.id.main_content, new WifiSettingsFragment()).commit();
+                            .replace(R.id.main_content, fragment).commit();
 //                    getContext().startActivity(new Intent(WifiSettingsFragment.class));
                     return true;
                 }
             });
             root.addPreference(p);
         }
+
         //TODO add Eventproviders
         final Preference p = new Preference(getActivity());
         p.setIcon(R.drawable.ic_add_black_24dp);
@@ -89,19 +95,13 @@ public class EventsSettingsFragment extends PreferenceFragment implements
         p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
+                WifiSettingsFragment fragment = new WifiSettingsFragment();
+                fragment.id = String.valueOf(p.hashCode());
                 getFragmentManager().beginTransaction()
-                        .replace(R.id.main_content, new WifiSettingsFragment()).commit();
+                        .replace(R.id.main_content, fragment).commit();
                 return true;
             }
         });
         root.addPreference(p);
-    }
-
-    @Override
-    public void onSelectItem(int i) {
-        //TODO
-        datasource.createWifiEvent(true, ssidsFoundArray[i], "", null, null,
-                datasource.getAllSoundProfiles().get(0));
-        buildUI();
     }
 }

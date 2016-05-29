@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="sound_profile">
+    <string-array name="sound_profiles">
         <item>@string/alarms_only</item>
         <item>@string/total_silence</item>
     </string-array>

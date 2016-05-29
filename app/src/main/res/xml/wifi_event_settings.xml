@@ -1,27 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   android:key="wifi_event_settings"
-                  android:title="@string/wifi_event_settings">
-    <SwitchPreference
-        android:defaultValue="true"
-        android:key="enable"
-        android:title="On"/>
-    <EditTextPreference
-        android:key="rule_name"
-        android:summary="@string/rule_name_default"
-        android:title="@string/rule_name_title"/>
-    <ListPreference
-        android:key="ssid"
-        android:title="@string/mute_on_wifi"
-        android:summary="@string/no_wifi_chosen" />
-        <!--android:entries="@array/ssids"-->
-        <!--android:entryValues="@array/listvalues"/>-->
-    <ListPreference
-        android:defaultValue="1"
-        android:key="soundprofile"
-        android:title="@string/sound_profile_title"
-        android:entries="@array/sound_profile"
-        android:summary="@string/alarms_only"
-        android:entryValues="@array/listvalues"/>
+                  android:title="@string/wifi_event_settings"
+    >
+    <!--<SwitchPreference-->
+        <!--android:defaultValue="true"-->
+        <!--android:key="enable"-->
+        <!--android:title="On"-->
+        <!--/>-->
+    <!--<EditTextPreference-->
+        <!--android:key="rule_name"-->
+        <!--android:summary="@string/rule_name_default"-->
+        <!--android:title="@string/rule_name_title"/>-->
+    <!--<ListPreference-->
+        <!--android:key="ssid"-->
+        <!--android:summary="@string/no_wifi_chosen"-->
+        <!--android:title="@string/mute_on_wifi"/>-->
+    <!--&lt;!&ndash;android:entries="@array/ssids"&ndash;&gt;-->
+    <!--&lt;!&ndash;android:entryValues="@array/listvalues"/>&ndash;&gt;-->
+    <!--<ListPreference-->
+        <!--android:defaultValue="1"-->
+        <!--android:entries="@array/sound_profile"-->
+        <!--android:entryValues="@array/listvalues"-->
+        <!--android:key="soundprofile"-->
+        <!--android:summary="@string/alarms_only"-->
+        <!--android:title="@string/sound_profile_title"/>-->
 
 </PreferenceScreen>
