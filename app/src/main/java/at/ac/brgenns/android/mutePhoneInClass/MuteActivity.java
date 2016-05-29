@@ -10,7 +10,6 @@ import android.media.AudioManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,11 +20,11 @@ import android.widget.Toast;
 
 import java.util.List;
 
-public class MuteActivity extends Activity implements Dialog.SSIDChosenListener {
+public class MuteActivity extends Activity implements FirstRunSSIDChooser.SSIDChosenListener {
 
     public static final String SSID_PREFERENCES = "SSIDprefs";
     String wifisFoundArray[];
-    Dialog newFragment = new Dialog();
+    FirstRunSSIDChooser newFragment = new FirstRunSSIDChooser();
     String chosenSSID;
     AudioManager volume_state;
     List<ScanResult> wifisFoundList;

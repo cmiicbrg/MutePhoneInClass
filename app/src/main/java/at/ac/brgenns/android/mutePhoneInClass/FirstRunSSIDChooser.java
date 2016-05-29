@@ -9,7 +9,7 @@ import android.app.DialogFragment;
 /**
  * Created by User on 30.03.2016.
  */
-public class Dialog extends DialogFragment {
+public class FirstRunSSIDChooser extends DialogFragment {
 
     private String[] iwosiwos;
     private SSIDChosenListener dialogListener;

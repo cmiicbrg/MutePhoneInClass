@@ -19,7 +19,6 @@ import at.ac.brgenns.android.mutePhoneInClass.prefs.model.EventProvider;
 import at.ac.brgenns.android.mutePhoneInClass.prefs.model.SoundProfile;
 import at.ac.brgenns.android.mutePhoneInClass.prefs.model.WifiEvent;
 
-import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.EVENT;
 import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.EVENT_BEGIN;
 import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.EVENT_END;
 import static at.ac.brgenns.android.mutePhoneInClass.prefs.db.MPICSQLiteHelper.EVENT_EVENT_PROVIDER;
@@ -137,7 +136,7 @@ public class PreferenceDataSource {
     }
 
     public WifiEvent createWifiEvent(boolean active, String SSID, String days,
-                                        Date starttime, Date endtime, SoundProfile soundProfile) {
+                                     Date starttime, Date endtime, SoundProfile soundProfile) {
         WifiEvent wifiEvent =
                 new WifiEvent(active, SSID, days,
                         starttime, endtime, soundProfile);
@@ -167,14 +166,21 @@ public class PreferenceDataSource {
         wifiEvent.setActive(
                 cursor.getInt(cursor.getColumnIndex(WIFI_EVENT_ACTIVE)) == 1 ? true : false);
         wifiEvent.setSSID(cursor.getString(cursor.getColumnIndex(WIFI_EVENT_SSID)));
-        wifiEvent.setDays(cursor.getString(cursor.getColumnIndex(WIFI_EVENT_DAYS)));
-        wifiEvent.setStarttime(
-                fromTimeString(cursor.getString(cursor.getColumnIndex(WIFI_EVENT_STARTTIME))));
-        wifiEvent.setEndtime(
-                fromTimeString(cursor.getString(cursor.getColumnIndex(WIFI_EVENT_ENDTIME))));
+        String days = cursor.getString(cursor.getColumnIndex(WIFI_EVENT_DAYS));
+        if (days != null) {
+            wifiEvent.setDays(days);
+        }
+        String startTime = cursor.getString(cursor.getColumnIndex(WIFI_EVENT_STARTTIME));
+        String endTime = cursor.getString(cursor.getColumnIndex(WIFI_EVENT_ENDTIME));
+        if (startTime != null && endTime != null) {
+            wifiEvent.setStarttime(
+                    fromTimeString(startTime));
+            wifiEvent.setEndtime(
+                    fromTimeString(cursor.getString(cursor.getColumnIndex(WIFI_EVENT_ENDTIME))));
+        }
         //TODO: write method for retrieving a single Soundprofile
         wifiEvent.setSoundProfile(getAllSoundProfiles()
-                .get(cursor.getInt(cursor.getColumnIndex(WIFI_EVENT_SOUND_PROFILE))));
+                .get(cursor.getLong(cursor.getColumnIndex(WIFI_EVENT_SOUND_PROFILE))));
         return wifiEvent;
     }
 
@@ -240,9 +246,13 @@ public class PreferenceDataSource {
         ContentValues values = new ContentValues();
         values.put(WIFI_EVENT_ACTIVE, wifiEvent.isActive());
         values.put(WIFI_EVENT_SSID, wifiEvent.getSSID());
-        values.put(WIFI_EVENT_DAYS, wifiEvent.getDays());
-        values.put(WIFI_EVENT_STARTTIME, toTimeString(wifiEvent.getStarttime()));
-        values.put(WIFI_EVENT_ENDTIME, toTimeString(wifiEvent.getEndtime()));
+        if (!"".equals(wifiEvent.getDays())) {
+            values.put(WIFI_EVENT_DAYS, wifiEvent.getDays());
+        }
+        if (wifiEvent.getStarttime() != null && wifiEvent.getEndtime() != null) {
+            values.put(WIFI_EVENT_STARTTIME, toTimeString(wifiEvent.getStarttime()));
+            values.put(WIFI_EVENT_ENDTIME, toTimeString(wifiEvent.getEndtime()));
+        }
         values.put(WIFI_EVENT_SOUND_PROFILE, wifiEvent.getSoundProfile().getSoundProfileID());
         return values;
     }

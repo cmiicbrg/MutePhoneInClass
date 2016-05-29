@@ -7,7 +7,7 @@ import android.preference.PreferenceScreen;
 
 import java.util.TreeMap;
 
-import at.ac.brgenns.android.mutePhoneInClass.Dialog;
+import at.ac.brgenns.android.mutePhoneInClass.FirstRunSSIDChooser;
 import at.ac.brgenns.android.mutePhoneInClass.R;
 import at.ac.brgenns.android.mutePhoneInClass.prefs.db.PreferenceDataSource;
 import at.ac.brgenns.android.mutePhoneInClass.prefs.model.EventProvider;
@@ -17,7 +17,7 @@ import at.ac.brgenns.android.mutePhoneInClass.prefs.model.WifiEvent;
  * Created by Christoph on 27.05.2016.
  */
 public class EventsSettingsFragment extends PreferenceFragment implements
-        Dialog.SSIDChosenListener {
+        FirstRunSSIDChooser.SSIDChosenListener {
     private PreferenceDataSource datasource;
     private TreeMap<Long, WifiEvent> wifiEvents;
     private TreeMap<Long, EventProvider> eventProviders;
@@ -46,7 +46,7 @@ public class EventsSettingsFragment extends PreferenceFragment implements
 //            for (int i = 0; i < wifisFoundList.size(); i++) {
 //                ssidsFoundArray[i] = wifisFoundList.get(i).SSID;
 //            }
-//            Dialog dialog = new Dialog();
+//            FirstRunSSIDChooser dialog = new FirstRunSSIDChooser();
 //            dialog.setOptions(ssidsFoundArray);
 //            dialog.show(getFragmentManager(), "dosth");
 //        }
@@ -79,7 +79,7 @@ public class EventsSettingsFragment extends PreferenceFragment implements
                     return true;
                 }
             });
-
+            root.addPreference(p);
         }
         //TODO add Eventproviders
         final Preference p = new Preference(getActivity());
