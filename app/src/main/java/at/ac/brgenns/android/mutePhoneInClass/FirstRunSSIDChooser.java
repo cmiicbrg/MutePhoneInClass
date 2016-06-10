@@ -2,9 +2,9 @@ package at.ac.brgenns.android.mutePhoneInClass;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.app.DialogFragment;
 
 /**
  * Created by User on 30.03.2016.
@@ -34,6 +34,13 @@ public class FirstRunSSIDChooser extends DialogFragment {
                         dialogListener.onSelectItem(i);
                     }
 
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
                 });
 
         return select_wifi.create();
