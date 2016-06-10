@@ -1,10 +1,17 @@
 package at.ac.brgenns.android.mutePhoneInClass.prefs;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -26,12 +33,14 @@ import at.ac.brgenns.android.mutePhoneInClass.prefs.model.WifiEvent;
 public class MuteSettingsActivity extends PreferenceActivity
         implements FirstRunSSIDChooser.SSIDChosenListener {
     public static final String RULES_KEY = "rule_ids";
+    private static final int REQUIRED_PERMISSIONS_REQUEST_CODE = 1;
     private PreferenceDataSource datasource;
     private TreeMap<Long, WifiEvent> wifiEvents;
     private TreeMap<Long, EventProvider> eventProviders;
     private String[] ssidsFoundArray;
     private Set<String> ids;
-
+    public static final String[] PERMISSIONS = {Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.CHANGE_WIFI_STATE};
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -80,20 +89,79 @@ public class MuteSettingsActivity extends PreferenceActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getIDs().isEmpty()) {
-            WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-            wifi.startScan();
-            List<ScanResult> wifisFoundList = wifi.getScanResults();
-
-            ssidsFoundArray = new String[wifisFoundList.size()];
-            for (int i = 0; i < wifisFoundList.size(); i++) {
-                ssidsFoundArray[i] = wifisFoundList.get(i).SSID;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !hasPermissionsToScanWifi()) {
+            requestPermissions(PERMISSIONS,
+                    REQUIRED_PERMISSIONS_REQUEST_CODE);
+        } else {
+            if (getIDs().isEmpty()) {
+                firstRunScanAndShowWifi();
             }
-            FirstRunSSIDChooser firstRunSSIDChooser = new FirstRunSSIDChooser();
-            firstRunSSIDChooser.setOptions(ssidsFoundArray);
-            firstRunSSIDChooser.show(getFragmentManager(), "dosth");
         }
         setContentView(R.layout.activity_mute_settings);
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private boolean hasPermissionsToScanWifi() {
+        boolean hasPermissions = true;
+        for (String permission : PERMISSIONS) {
+            hasPermissions &= checkSelfPermission(permission) ==
+                    PackageManager.PERMISSION_GRANTED;
+        }
+        return hasPermissions;
+    }
+
+    private void firstRunScanAndShowWifi() {
+        WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        wifi.startScan();
+        IntentFilter i = new IntentFilter();
+        i.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                unregisterReceiver(this);
+                WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+                List<ScanResult> wifisFoundList = wifi.getScanResults();
+//            WifiInfo info = wifi.getConnectionInfo();
+                if (!wifisFoundList.isEmpty()) {
+                    ssidsFoundArray = new String[wifisFoundList.size()];
+                    for (int i = 0; i < wifisFoundList.size(); i++) {
+                        ssidsFoundArray[i] = wifisFoundList.get(i).SSID;
+                    }
+                    FirstRunSSIDChooser firstRunSSIDChooser = new FirstRunSSIDChooser();
+                    firstRunSSIDChooser.setOptions(ssidsFoundArray);
+                    firstRunSSIDChooser.show(getFragmentManager(), "dosth");
+                } else {
+                    // There seems to be a bug in 6.0 https://code.google.com/p/android/issues/detail?id=185370
+                    // getScanResults returns an empty list when Locationservice is turned off
+                    // Google says it's by design but:
+                    // this seems not to be an issue on 5.1.1 and 6.0.1 should be tested with 4.4,...
+                    // this would run counter to the intention of the App not to use Locationservice...
+                    // but we have to mitigate the Problem:
+                    //TODO: request user to turn Locationservice on
+                    //String release = Build.VERSION.RELEASE; 6.0
+                }
+            }
+        };
+        registerReceiver(receiver, i);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                           int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUIRED_PERMISSIONS_REQUEST_CODE) {
+            boolean permissionsGranted = true;
+            for (int grantResult : grantResults) {
+                permissionsGranted &= grantResult == PackageManager.PERMISSION_GRANTED;
+            }
+            if (permissionsGranted) {
+                if (getIDs().isEmpty()) {
+                    firstRunScanAndShowWifi();
+                }
+            }
+            //TODO: else { show explanation; }
+        }
     }
 
     public Set<String> getIDs() {
