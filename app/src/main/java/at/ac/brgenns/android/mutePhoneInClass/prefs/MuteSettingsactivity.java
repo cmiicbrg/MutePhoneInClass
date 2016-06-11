@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
@@ -18,6 +19,20 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.util.Log;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStates;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
 
 import java.util.HashSet;
 import java.util.List;
@@ -31,16 +46,23 @@ import at.ac.brgenns.android.mutePhoneInClass.prefs.model.EventProvider;
 import at.ac.brgenns.android.mutePhoneInClass.prefs.model.WifiEvent;
 
 public class MuteSettingsActivity extends PreferenceActivity
-        implements FirstRunSSIDChooser.SSIDChosenListener {
+        implements FirstRunSSIDChooser.SSIDChosenListener, GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener {
+
     public static final String RULES_KEY = "rule_ids";
     private static final int REQUIRED_PERMISSIONS_REQUEST_CODE = 1;
+    private static final int REQUEST_CHECK_SETTINGS = 2;
+    private static final String TAG = MuteSettingsActivity.class.getSimpleName();
+
+    public GoogleApiClient mGoogleApiClient;
     private PreferenceDataSource datasource;
     private TreeMap<Long, WifiEvent> wifiEvents;
     private TreeMap<Long, EventProvider> eventProviders;
     private String[] ssidsFoundArray;
     private Set<String> ids;
-    public static final String[] PERMISSIONS = {Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.CHANGE_WIFI_STATE};
+    public static final String[] PERMISSIONS =
+            {Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.CHANGE_WIFI_STATE};
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -117,6 +139,7 @@ public class MuteSettingsActivity extends PreferenceActivity
         i.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
 
         BroadcastReceiver receiver = new BroadcastReceiver() {
+
             @Override
             public void onReceive(Context context, Intent intent) {
                 unregisterReceiver(this);
@@ -138,8 +161,10 @@ public class MuteSettingsActivity extends PreferenceActivity
                     // this seems not to be an issue on 5.1.1 and 6.0.1 should be tested with 4.4,...
                     // this would run counter to the intention of the App not to use Locationservice...
                     // but we have to mitigate the Problem:
-                    //TODO: request user to turn Locationservice on
-                    //String release = Build.VERSION.RELEASE; 6.0
+                    String release = Build.VERSION.RELEASE;
+                    if (release.equals("6.0")) {
+                        checkLocationServiceEnabled();
+                    }
                 }
             }
         };
@@ -235,4 +260,100 @@ public class MuteSettingsActivity extends PreferenceActivity
         storeIDs();
 
     }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private void checkLocationServiceEnabled() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d(TAG, "GoogleApiClient.ConnectionCallbacks -> connected");
+        if (mGoogleApiClient.getConnectionResult(LocationServices.API).isSuccess()) {
+            LocationRequest justChecking = LocationRequest.create();
+            LocationSettingsRequest.Builder builder =
+                    new LocationSettingsRequest.Builder()
+                            .addLocationRequest(justChecking);
+            builder.setNeedBle(true);
+            com.google.android.gms.common.api.PendingResult<LocationSettingsResult>
+                    result =
+                    LocationServices.SettingsApi
+                            .checkLocationSettings(mGoogleApiClient, builder.build());
+
+            result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+                @Override
+                public void onResult(LocationSettingsResult result) {
+                    final Status status = result.getStatus();
+                    switch (status.getStatusCode()) {
+                        case LocationSettingsStatusCodes.SUCCESS:
+                            // All location settings are satisfied.
+
+                            // So there were really no WIFIs available at Scan time
+                            // this is OK - we won't bother creating a WIFI related setting now
+                            break;
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            // Location settings are not satisfied. But could be fixed by showing the user
+                            // a dialog.
+                            try {
+                                // Show the dialog by calling startResolutionForResult(),
+                                // and check the result in onActivityResult().
+                                status.startResolutionForResult(
+                                        MuteSettingsActivity.this,
+                                        REQUEST_CHECK_SETTINGS);
+                            } catch (IntentSender.SendIntentException e) {
+                                // Ignore the error.
+                            }
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            // Location settings are not satisfied. However, we have no way to fix the
+                            // settings so we won't show the dialog.
+
+                            // That's bad  - is it possible to ask the user again when he is creating a WIFI-based rule himself?
+                            // see http://stackoverflow.com/questions/29861580/locationservices-settingsapi-reset-settings-change-unavailable-flag
+                            break;
+                    }
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.d(TAG, "GoogleApiClient.ConnectionCallbacks -> connection suspended");
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.d(TAG, "GoogleApiClient.OnConnectionFailedListener -> connectionFailed");
+    }
+
+    @Override
+    @TargetApi(Build.VERSION_CODES.M)
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+        final LocationSettingsStates states = LocationSettingsStates.fromIntent(intent);
+        switch (requestCode) {
+            case REQUEST_CHECK_SETTINGS:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        firstRunScanAndShowWifi();
+
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        // The user was asked to change settings, but chose not to
+                        break;
+                    default:
+                        break;
+                }
+                break;
+        }
+
+    }
+
 }
