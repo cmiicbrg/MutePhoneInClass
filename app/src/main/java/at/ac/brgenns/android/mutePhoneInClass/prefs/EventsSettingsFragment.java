@@ -84,6 +84,7 @@ public class EventsSettingsFragment extends PreferenceFragment {
                     return true;
                 }
             });
+
             root.addPreference(p);
         }
 
