@@ -25,7 +25,6 @@ public class EventsSettingsFragment extends PreferenceFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.mute_settings);
-
     }
 
     @Override
@@ -57,7 +56,7 @@ public class EventsSettingsFragment extends PreferenceFragment {
         super.onPause();
     }
 
-    private void buildUI() {
+    protected void buildUI() {
         final PreferenceScreen root = getPreferenceScreen();
         root.removeAll();
 //        wifiEvents = datasource.getAllWifiEvents();

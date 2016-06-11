@@ -61,6 +61,9 @@ public class WifiSettingsFragment extends PreferenceFragment {
         ssid.setTitle(R.string.mute_on_wifi);
         WifiManager wifi = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
         wifi.startScan();
+        //TODO: when editing a setting we don't want to search for WIFIS or add the old WIFI zu the list
+        //TODO: Use a receiver...
+        //TODO: on 6.0 check if we have to enable Locationservice
         List<ScanResult> wifisFoundList = wifi.getScanResults();
         String[] ssidsFoundArray = new String[wifisFoundList.size()];
 //        ssidsFoundArray[0] = ssid.getValue();

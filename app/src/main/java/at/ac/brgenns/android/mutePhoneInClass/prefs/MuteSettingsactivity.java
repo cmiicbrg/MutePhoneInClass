@@ -3,6 +3,8 @@ package at.ac.brgenns.android.mutePhoneInClass.prefs;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -61,7 +63,7 @@ public class MuteSettingsActivity extends PreferenceActivity
     private String[] ssidsFoundArray;
     private Set<String> ids;
     public static final String[] PERMISSIONS =
-            {Manifest.permission.ACCESS_FINE_LOCATION,
+            {Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.CHANGE_WIFI_STATE};
     /**
      * A preference value change listener that updates the preference's summary
@@ -114,10 +116,8 @@ public class MuteSettingsActivity extends PreferenceActivity
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !hasPermissionsToScanWifi()) {
             requestPermissions(PERMISSIONS,
                     REQUIRED_PERMISSIONS_REQUEST_CODE);
-        } else {
-            if (getIDs().isEmpty()) {
-                firstRunScanAndShowWifi();
-            }
+        } else if (getIDs().isEmpty()) {
+            firstRunScanAndShowWifi();
         }
         setContentView(R.layout.activity_mute_settings);
     }
@@ -258,7 +258,10 @@ public class MuteSettingsActivity extends PreferenceActivity
 
         getIDs().add("0");
         storeIDs();
-
+        Fragment f = getFragmentManager().findFragmentById(R.id.main_content);
+        if (f instanceof EventsSettingsFragment) {
+            ((EventsSettingsFragment)f).buildUI();
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.M)
