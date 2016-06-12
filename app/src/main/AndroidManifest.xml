@@ -20,8 +20,8 @@
         android:theme="@style/AppTheme">
         <service
             android:name=".MutePhoneService"
-            android:exported="false"
-            android:process=":MutePhoneService"/>
+            android:exported="false"/>
+        <!--android:process=":MutePhoneService"/>-->
 
 
         <activity

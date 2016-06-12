@@ -3,13 +3,14 @@ package at.ac.brgenns.android.mutePhoneInClass;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.util.Log;
 
 import java.util.Set;
 
 public class WifiBroadcastReceiver extends BroadcastReceiver {
-    private static final String TAG = BroadcastReceiver.class.getSimpleName();
+    private static final String TAG = WifiBroadcastReceiver.class.getSimpleName();
 
     public WifiBroadcastReceiver() {
     }
@@ -21,10 +22,12 @@ public class WifiBroadcastReceiver extends BroadcastReceiver {
         Log.d(TAG, "Intent: " + intent.toString());
         Log.d(TAG, "Action: " + intent.getAction());
         Log.d(TAG, "Extras: " + getExtrasString(intent));
-
         Intent mutePhoneService = new Intent(context, MutePhoneService.class);
-        // TODO: change according to the real intent_action
-        mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.WIFI_RESULT);
+        if (intent.getAction() == WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) {
+            mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.WIFI_RESULT);
+        } else {
+            mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.WIFI_STATE_CHANGE);
+        }
         context.startService(mutePhoneService);
     }
 

@@ -12,7 +12,6 @@ import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.media.AudioManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -63,7 +62,6 @@ public class MuteSettingsActivity extends PreferenceActivity
 
     public GoogleApiClient mGoogleApiClient;
     private String[] ssidsFoundArray;
-    private Set<String> ids;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,10 +101,10 @@ public class MuteSettingsActivity extends PreferenceActivity
                 List<ScanResult> wifisFoundList = wifi.getScanResults();
 //            WifiInfo info = wifi.getConnectionInfo();
                 if (!wifisFoundList.isEmpty()) {
-                    ssidsFoundArray = new String[wifisFoundList.size()];
-                    for (int i = 0; i < wifisFoundList.size(); i++) {
-                        ssidsFoundArray[i] = wifisFoundList.get(i).SSID;
-                    }
+                    Set<String> SSIDStringSet =
+                            MutePhoneService.scanResultToUniqueSSIDStringSet(wifisFoundList);
+                    ssidsFoundArray = new String[SSIDStringSet.size()];
+                    SSIDStringSet.toArray(ssidsFoundArray);
                     FirstRunSSIDChooser firstRunSSIDChooser = new FirstRunSSIDChooser();
                     firstRunSSIDChooser.setOptions(ssidsFoundArray);
                     firstRunSSIDChooser.show(getFragmentManager(), "dosth");
@@ -145,11 +143,9 @@ public class MuteSettingsActivity extends PreferenceActivity
         }
     }
 
-    public Set<String> getIDs() {
-        if (ids == null) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            ids = prefs.getStringSet(RULES_KEY, new HashSet<String>());
-        }
+    public final Set<String> getIDs() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        Set<String> ids = prefs.getStringSet(RULES_KEY, new HashSet<String>());
         return ids;
     }
 
@@ -161,23 +157,11 @@ public class MuteSettingsActivity extends PreferenceActivity
 
     public void onResume() {
         super.onResume();
-//        datasource = new PreferenceDataSource(this);
-//        datasource.open();
-        getIDs();
     }
 
     @Override
     public void onPause() {
-//        datasource.close();
-        storeIDs();
         super.onPause();
-    }
-
-    private void storeIDs() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putStringSet(RULES_KEY, ids);
-        editor.commit();
     }
 
     public static boolean addID(Activity activity, String id) {
@@ -187,9 +171,10 @@ public class MuteSettingsActivity extends PreferenceActivity
         if (ids.contains(id)) {
             success = false;
         } else {
-            ids.add(id);
+            Set<String> idsToStore = new HashSet<>(ids);
+            idsToStore.add(id);
             SharedPreferences.Editor editor = prefs.edit();
-            editor.putStringSet(RULES_KEY, ids);
+            editor.putStringSet(RULES_KEY, idsToStore);
             success = editor.commit();
         }
         return success;
@@ -202,13 +187,13 @@ public class MuteSettingsActivity extends PreferenceActivity
         editor.putString("ssid_0", ssidsFoundArray[i]);
         editor.commit();
 
-        getIDs().add("0");
-        storeIDs();
+        //This is setting 0
+        addID(this, "0");
 
         // Refresh the view
         Fragment f = getFragmentManager().findFragmentById(R.id.main_content);
         if (f instanceof EventsSettingsFragment) {
-            ((EventsSettingsFragment)f).buildUI();
+            ((EventsSettingsFragment) f).buildUI();
         }
 
         // Enable the BootCompletedReceiver and WifiBroadcastReceiver and
@@ -225,24 +210,8 @@ public class MuteSettingsActivity extends PreferenceActivity
                 PackageManager.DONT_KILL_APP);
 
         Intent mutePhoneService = new Intent(this, MutePhoneService.class);
-        mutePhoneService.putExtra(MutePhoneService.TASK,MutePhoneService.FIRST_RUN);
-
+        mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.FIRST_RUN);
         startService(mutePhoneService);
-//
-//        Intent nextScan = new Intent(getApplicationContext(), AlarmReceiver.class);
-//        PendingIntent pendingNextScan =
-//                PendingIntent.getBroadcast(getApplicationContext(), 0, nextScan, 0);
-//        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);;
-//        alarmManager
-//                .set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 180000,
-//                        pendingNextScan);
-
-        // Mute Phone since this has been triggered by choosing the SSID -> the user expects that the phone will now be muted
-        // Since at the current state there are no additional settings we use the default: Alarms_only
-//        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-//        audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-
-
     }
 
     @TargetApi(Build.VERSION_CODES.M)
