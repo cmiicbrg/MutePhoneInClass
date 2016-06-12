@@ -17,10 +17,11 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.app.ActionBar;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -38,13 +39,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import at.ac.brgenns.android.mutePhoneInClass.AppCompatPreferenceActivity;
 import at.ac.brgenns.android.mutePhoneInClass.BootCompletedReceiver;
 import at.ac.brgenns.android.mutePhoneInClass.FirstRunSSIDChooser;
 import at.ac.brgenns.android.mutePhoneInClass.MutePhoneService;
 import at.ac.brgenns.android.mutePhoneInClass.R;
 import at.ac.brgenns.android.mutePhoneInClass.WifiBroadcastReceiver;
 
-public class MuteSettingsActivity extends PreferenceActivity
+public class MuteSettingsActivity extends AppCompatPreferenceActivity
         implements FirstRunSSIDChooser.SSIDChosenListener, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
@@ -67,13 +69,27 @@ public class MuteSettingsActivity extends PreferenceActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setContentView(R.layout.activity_mute_settings);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !hasPermissionsToScanWifi()) {
             requestPermissions(PERMISSIONS,
                     REQUIRED_PERMISSIONS_REQUEST_CODE);
         } else if (getIDs().isEmpty()) {
             firstRunScanAndShowWifi();
         }
-        setContentView(R.layout.activity_mute_settings);
+    }
+
+    /**
+     * Set up the {@link android.app.ActionBar}, if the API is available.
+     */
+    private void setupActionBar() {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            // Show the Up button in the action bar.
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.M)

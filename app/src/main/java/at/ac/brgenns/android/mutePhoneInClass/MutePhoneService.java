@@ -77,7 +77,7 @@ public class MutePhoneService extends Service {
                 setAlarm(DEFAULT_ALARM_INTERVAL);
                 // Mute Phone since this has been triggered by choosing the SSID -> the user expects that the phone will now be muted
                 // Since at the current state there are no additional settings we use the default: Alarms_only
-                setSoundProfile(0);
+                setSoundProfile("0");
                 Toast.makeText(getApplicationContext(), "Phone muted", Toast.LENGTH_LONG).show();
                 break;
             case ALARM:
@@ -94,7 +94,7 @@ public class MutePhoneService extends Service {
                 setAlarm(3);
                 break;
             case WIFI_RESULT:
-                // We received a WIFI RESULT - maybe because another app requested a scan
+                // We received a WIFI RESULT - maybe because another app or the system requested a scan
                 // in each case we can reschedule the alarm
                 cancelAlarm();
                 setAlarm(3);
@@ -134,7 +134,7 @@ public class MutePhoneService extends Service {
             if (prefs.contains("ssid_" + id) && prefs.getBoolean("enable_" + id, true) &&
                     !mute) {
                 if (SSIDs.contains(prefs.getString("ssid_" + id, ""))) {
-                    setSoundProfile(prefs.getInt("soundProfile_" + id, 0));
+                    setSoundProfile(prefs.getString("soundProfile_" + id, "0"));
                     mute = true;
                 }
             }
@@ -156,7 +156,7 @@ public class MutePhoneService extends Service {
                 if (prefs.contains("ssid_" + id) && prefs.getBoolean("enable_" + id, true) &&
                         !mute) {
                     if (prefs.getString("ssid_" + id, "").equals(currentSSID)) {
-                        setSoundProfile(prefs.getInt("soundProfile_" + id, 0));
+                        setSoundProfile(prefs.getString("soundProfile_" + id, "0"));
                         mute = true;
                     }
                 }
@@ -170,14 +170,15 @@ public class MutePhoneService extends Service {
         prefIDs = prefs.getStringSet(MuteSettingsActivity.RULES_KEY, new HashSet<String>());
     }
 
-    private void setSoundProfile(int id) {
+    private void setSoundProfile(String id) {
         // always set the SoundProfile or check otherwise because the user might have changed the sound options
-        if (id == 0) {
+
+        if (id.equals("0")) {
             audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-        } else if (id == 1) {
+        } else if (id.equals("1")) {
             audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
             // TODO: ...
-        } else if (id > 1) {
+        } else  {
             // load soundProfile from preferences -> not implemented yet
 //            SharedPreferences prefs =
 //                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext());

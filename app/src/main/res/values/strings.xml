@@ -25,4 +25,5 @@
     <!-- TODO: remove this placeholder text -->
     <string name="silencer_notification_text">%1$s: The phone was muted because ...
     </string>
+    <string name="enable">Enable phone muting</string>
 </resources>

@@ -6,6 +6,8 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.preference.SwitchPreference;
+import android.util.Log;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,7 +17,9 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
 /**
  * Created by Christoph on 27.05.2016.
  */
-public class EventsSettingsFragment extends PreferenceFragment {
+public class EventsSettingsFragment extends PreferenceFragment
+        implements Preference.OnPreferenceChangeListener {
+    private static final String TAG = EventsSettingsFragment.class.getSimpleName();
 //    private PreferenceDataSource datasource;
 //    private TreeMap<Long, WifiEvent> wifiEvents;
 //    private TreeMap<Long, EventProvider> eventProviders;
@@ -63,6 +67,13 @@ public class EventsSettingsFragment extends PreferenceFragment {
 //        eventProviders = datasource.getAllEventProviders();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         Set<String> IDs = prefs.getStringSet(MuteSettingsActivity.RULES_KEY, new HashSet<String>());
+        final SwitchPreference pEnable = new SwitchPreference(getActivity());
+        pEnable.setKey("mute_enabled");
+        pEnable.setTitle(R.string.enable);
+        pEnable.setDefaultValue(true);
+        pEnable.setOnPreferenceChangeListener(this);
+        root.addPreference(pEnable);
+        // TODO final Preference pDisableFor... if disabled it should be possible to set for how long
 
         for (final String id : IDs) {
             final Preference p = new Preference(getActivity());
@@ -103,5 +114,19 @@ public class EventsSettingsFragment extends PreferenceFragment {
             }
         });
         root.addPreference(p);
+    }
+
+    @Override
+    public boolean onPreferenceChange(Preference preference, Object newValue) {
+        if (preference.getKey().equals("mute_enabled")) {
+            if (newValue.equals(Boolean.TRUE)) {
+                Log.d(TAG, "muting will be enabled, enabling Receivers");
+                // TODO
+            } else {
+                Log.d(TAG, "muting will be disabled, disabling Receivers");
+                // TODO
+            }
+        }
+        return true;
     }
 }

@@ -22,6 +22,7 @@ public class PreferenceChangeHelper {
                     if (preference instanceof ListPreference) {
                         // For list preferences, look up the correct display value in
                         // the preference's 'entries' list.
+
                         ListPreference listPreference = (ListPreference) preference;
                         int index = listPreference.findIndexOfValue(stringValue);
 

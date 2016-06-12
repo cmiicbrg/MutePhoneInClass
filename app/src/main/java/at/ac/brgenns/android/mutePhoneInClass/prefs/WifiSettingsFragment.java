@@ -19,7 +19,7 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
  * Created by Christoph on 27.05.2016.
  */
 public class WifiSettingsFragment extends PreferenceFragment {
-    String id = "1";
+    String id = "0";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
