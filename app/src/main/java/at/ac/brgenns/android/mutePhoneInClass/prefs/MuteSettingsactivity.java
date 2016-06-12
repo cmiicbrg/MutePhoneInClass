@@ -4,23 +4,22 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.ListPreference;
-import android.preference.Preference;
+import android.os.Handler;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.preference.RingtonePreference;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -39,75 +38,32 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeMap;
 
+import at.ac.brgenns.android.mutePhoneInClass.BootCompletedReceiver;
 import at.ac.brgenns.android.mutePhoneInClass.FirstRunSSIDChooser;
+import at.ac.brgenns.android.mutePhoneInClass.MutePhoneService;
 import at.ac.brgenns.android.mutePhoneInClass.R;
-import at.ac.brgenns.android.mutePhoneInClass.prefs.db.PreferenceDataSource;
-import at.ac.brgenns.android.mutePhoneInClass.prefs.model.EventProvider;
-import at.ac.brgenns.android.mutePhoneInClass.prefs.model.WifiEvent;
+import at.ac.brgenns.android.mutePhoneInClass.WifiBroadcastReceiver;
 
 public class MuteSettingsActivity extends PreferenceActivity
         implements FirstRunSSIDChooser.SSIDChosenListener, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
-    public static final String RULES_KEY = "rule_ids";
-    private static final int REQUIRED_PERMISSIONS_REQUEST_CODE = 1;
-    private static final int REQUEST_CHECK_SETTINGS = 2;
     private static final String TAG = MuteSettingsActivity.class.getSimpleName();
 
-    public GoogleApiClient mGoogleApiClient;
-    private PreferenceDataSource datasource;
-    private TreeMap<Long, WifiEvent> wifiEvents;
-    private TreeMap<Long, EventProvider> eventProviders;
-    private String[] ssidsFoundArray;
-    private Set<String> ids;
+    private final Handler mHandler = new Handler();
+
+    private static final int REQUIRED_PERMISSIONS_REQUEST_CODE = 1;
+    private static final int REQUEST_CHECK_SETTINGS = 2;
+
+    public static final String RULES_KEY = "rule_ids";
     public static final String[] PERMISSIONS =
             {Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.CHANGE_WIFI_STATE};
-    /**
-     * A preference value change listener that updates the preference's summary
-     * to reflect its new value.
-     */
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener =
-            new Preference.OnPreferenceChangeListener() {
-                @Override
-                public boolean onPreferenceChange(Preference preference, Object value) {
-                    String stringValue = value.toString();
 
-                    if (preference instanceof ListPreference) {
-                        // For list preferences, look up the correct display value in
-                        // the preference's 'entries' list.
-                        ListPreference listPreference = (ListPreference) preference;
-                        int index = listPreference.findIndexOfValue(stringValue);
-
-                        // Set the summary to reflect the new value.
-                        preference.setSummary(
-                                index >= 0
-                                        ? listPreference.getEntries()[index]
-                                        : null);
-
-                    } else if (!(preference instanceof RingtonePreference)) {
-
-                        // For all other preferences, set the summary to the value's
-                        // simple string representation.
-                        preference.setSummary(stringValue);
-                    }
-                    return true;
-                }
-            };
-
-    public static void bindPreferenceSummaryToValue(Preference preference) {
-        // Set the listener to watch for value changes.
-        preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
-
-        // Trigger the listener immediately with the preference's
-        // current value.
-        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
-                PreferenceManager
-                        .getDefaultSharedPreferences(preference.getContext())
-                        .getString(preference.getKey(), ""));
-    }
+    public GoogleApiClient mGoogleApiClient;
+    private String[] ssidsFoundArray;
+    private Set<String> ids;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -241,16 +197,6 @@ public class MuteSettingsActivity extends PreferenceActivity
 
     @Override
     public void onSelectItem(int i) {
-//        datasource.createWifiEvent(true, ssidsFoundArray[i], "", null, null,
-//                datasource.getAllSoundProfiles().get(0L));
-//        Preference p = new Preference(this);
-//
-//        String id = String.valueOf(p.hashCode());
-//
-//        p.setKey("ssid" + "_" + id);
-//        p.setDefaultValue(ssidsFoundArray[i]);
-//        p.setPersistent(true);
-//        p.getEditor().commit();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString("ssid_0", ssidsFoundArray[i]);
@@ -258,10 +204,45 @@ public class MuteSettingsActivity extends PreferenceActivity
 
         getIDs().add("0");
         storeIDs();
+
+        // Refresh the view
         Fragment f = getFragmentManager().findFragmentById(R.id.main_content);
         if (f instanceof EventsSettingsFragment) {
             ((EventsSettingsFragment)f).buildUI();
         }
+
+        // Enable the BootCompletedReceiver and WifiBroadcastReceiver and
+        // Start the Service
+        ComponentName receiver = new ComponentName(this, BootCompletedReceiver.class);
+        PackageManager pm = this.getPackageManager();
+        pm.setComponentEnabledSetting(receiver,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP);
+
+        receiver = new ComponentName(this, WifiBroadcastReceiver.class);
+        pm.setComponentEnabledSetting(receiver,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP);
+
+        Intent mutePhoneService = new Intent(this, MutePhoneService.class);
+        mutePhoneService.putExtra(MutePhoneService.TASK,MutePhoneService.FIRST_RUN);
+
+        startService(mutePhoneService);
+//
+//        Intent nextScan = new Intent(getApplicationContext(), AlarmReceiver.class);
+//        PendingIntent pendingNextScan =
+//                PendingIntent.getBroadcast(getApplicationContext(), 0, nextScan, 0);
+//        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);;
+//        alarmManager
+//                .set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 180000,
+//                        pendingNextScan);
+
+        // Mute Phone since this has been triggered by choosing the SSID -> the user expects that the phone will now be muted
+        // Since at the current state there are no additional settings we use the default: Alarms_only
+//        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+//        audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+
+
     }
 
     @TargetApi(Build.VERSION_CODES.M)

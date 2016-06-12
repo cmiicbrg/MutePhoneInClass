@@ -39,7 +39,7 @@ public class WifiSettingsFragment extends PreferenceFragment {
     private SwitchPreference getEnablePreference() {
         SwitchPreference enable = new SwitchPreference(getActivity());
         enable.setKey("enable" + "_" + id);
-        enable.setTitle("On");
+        enable.setTitle(R.string.rule_enabled);
         enable.setDefaultValue(true);
         return enable;
     }
@@ -50,7 +50,7 @@ public class WifiSettingsFragment extends PreferenceFragment {
         name.setKey("rule_name" + "_" + id);
         name.setTitle(R.string.rule_name_title);
         name.setDefaultValue(getString(R.string.rule_name_default));
-        MuteSettingsActivity.bindPreferenceSummaryToValue(name);
+        PreferenceChangeHelper.bindPreferenceSummaryToValue(name);
         return name;
     }
 
@@ -60,8 +60,8 @@ public class WifiSettingsFragment extends PreferenceFragment {
         ssid.setKey("ssid" + "_" + id);
         ssid.setTitle(R.string.mute_on_wifi);
         WifiManager wifi = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
-        wifi.startScan();
-        //TODO: when editing a setting we don't want to search for WIFIS or add the old WIFI zu the list
+//        wifi.startScan();
+        //TODO: when editing a setting we don't want to search for WIFIS or add the old WIFI to the list
         //TODO: Use a receiver...
         //TODO: on 6.0 check if we have to enable Locationservice
         List<ScanResult> wifisFoundList = wifi.getScanResults();
@@ -72,7 +72,7 @@ public class WifiSettingsFragment extends PreferenceFragment {
         }
         ssid.setEntries(ssidsFoundArray);
         ssid.setEntryValues(ssidsFoundArray);
-        MuteSettingsActivity.bindPreferenceSummaryToValue(ssid);
+        PreferenceChangeHelper.bindPreferenceSummaryToValue(ssid);
         return ssid;
     }
 
@@ -84,7 +84,7 @@ public class WifiSettingsFragment extends PreferenceFragment {
         soundProfile.setEntries(R.array.sound_profiles);
         soundProfile.setEntryValues(R.array.listvalues);
         soundProfile.setDefaultValue("0");
-        MuteSettingsActivity.bindPreferenceSummaryToValue(soundProfile);
+        PreferenceChangeHelper.bindPreferenceSummaryToValue(soundProfile);
         return soundProfile;
     }
 

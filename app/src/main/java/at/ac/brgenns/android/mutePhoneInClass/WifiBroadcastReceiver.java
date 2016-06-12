@@ -21,6 +21,11 @@ public class WifiBroadcastReceiver extends BroadcastReceiver {
         Log.d(TAG, "Intent: " + intent.toString());
         Log.d(TAG, "Action: " + intent.getAction());
         Log.d(TAG, "Extras: " + getExtrasString(intent));
+
+        Intent mutePhoneService = new Intent(context, MutePhoneService.class);
+        // TODO: change according to the real intent_action
+        mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.WIFI_RESULT);
+        context.startService(mutePhoneService);
     }
 
     private String getExtrasString(Intent intent) {

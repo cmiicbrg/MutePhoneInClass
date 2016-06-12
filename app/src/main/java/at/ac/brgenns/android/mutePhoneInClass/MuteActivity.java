@@ -113,7 +113,7 @@ public class MuteActivity extends Activity implements FirstRunSSIDChooser.SSIDCh
     }
 
     public void startAlarm() {
-        Intent intent = new Intent(this, Receiver.class);
+        Intent intent = new Intent(this, AlarmReceiver.class);
         PendingIntent pendingIntent =
                 PendingIntent.getBroadcast(this.getApplicationContext(), 1337, intent, 0);
         AlarmManager alarm = (AlarmManager) getSystemService(ALARM_SERVICE);

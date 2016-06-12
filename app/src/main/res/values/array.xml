@@ -4,10 +4,6 @@
         <item>@string/alarms_only</item>
         <item>@string/total_silence</item>
     </string-array>
-    <string-array name="ssids">
-        <item>ChriMarg</item>
-        <item>ChriMargB</item>
-    </string-array>
     <string-array name="listvalues">
         <item>0</item>
         <item>1</item>
