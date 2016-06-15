@@ -13,7 +13,7 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
  */
 public class MPICSQLiteHelper extends SQLiteOpenHelper {
 
-    public static final String SOUND_PROFILE = "soundProfile";
+    public static final String SOUND_PROFILE = "SOUND_PROFILE";
     public static final String SOUND_PROFILE_ID = "soundProfileID";
     public static final String SOUND_PROFILE_NAME = "name";
     public static final String SOUND_PROFILE_MEDIA_VOLUME = "mediaVolume";

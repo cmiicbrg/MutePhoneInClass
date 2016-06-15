@@ -9,7 +9,7 @@ import android.os.Bundle;
 /**
  * Created by User on 30.03.2016.
  */
-public class FirstRunSSIDChooser extends DialogFragment {
+public class SSIDChooser extends DialogFragment {
 
     private String[] iwosiwos;
     private SSIDChosenListener dialogListener;

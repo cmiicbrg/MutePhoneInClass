@@ -35,6 +35,12 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".prefs.WifiSettingsActivity"
+            android:label="@string/wifi_rule_edit"
+            android:parentActivityName=".prefs.MuteSettingsActivity">
+        </activity>
+
         <receiver
             android:name=".WifiBroadcastReceiver"
             android:enabled="false">

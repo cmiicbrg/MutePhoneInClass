@@ -5,7 +5,6 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -16,11 +15,9 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
@@ -38,26 +35,22 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
-import at.ac.brgenns.android.mutePhoneInClass.AppCompatPreferenceActivity;
-import at.ac.brgenns.android.mutePhoneInClass.BootCompletedReceiver;
-import at.ac.brgenns.android.mutePhoneInClass.FirstRunSSIDChooser;
+import at.ac.brgenns.android.mutePhoneInClass.SSIDChooser;
 import at.ac.brgenns.android.mutePhoneInClass.MutePhoneService;
 import at.ac.brgenns.android.mutePhoneInClass.R;
-import at.ac.brgenns.android.mutePhoneInClass.WifiBroadcastReceiver;
 
 public class MuteSettingsActivity extends AppCompatPreferenceActivity
-        implements FirstRunSSIDChooser.SSIDChosenListener, GoogleApiClient.ConnectionCallbacks,
+        implements SSIDChooser.SSIDChosenListener, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = MuteSettingsActivity.class.getSimpleName();
 
-    private final Handler mHandler = new Handler();
-
     private static final int REQUIRED_PERMISSIONS_REQUEST_CODE = 1;
     private static final int REQUEST_CHECK_SETTINGS = 2;
 
-    public static final String RULES_KEY = "rule_ids";
+    public static final String SETTING_ID = "Setting_ID";
     public static final String[] PERMISSIONS =
             {Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.CHANGE_WIFI_STATE};
@@ -74,21 +67,11 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
         setSupportActionBar(toolbar);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !hasPermissionsToScanWifi()) {
+            //TODO: 06-13 10:04:48.123 12499-12499/at.ac.brgenns.android.mutePhoneInClass W/Activity: Can reqeust only one set of permissions at a time
             requestPermissions(PERMISSIONS,
                     REQUIRED_PERMISSIONS_REQUEST_CODE);
-        } else if (getIDs().isEmpty()) {
-            firstRunScanAndShowWifi();
-        }
-    }
-
-    /**
-     * Set up the {@link android.app.ActionBar}, if the API is available.
-     */
-    private void setupActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            // Show the Up button in the action bar.
-            actionBar.setDisplayHomeAsUpEnabled(true);
+        } else if (getIDs().isEmpty() && isMutingEnabled()) {
+            runScanAndShowWifi();
         }
     }
 
@@ -102,7 +85,7 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
         return hasPermissions;
     }
 
-    private void firstRunScanAndShowWifi() {
+    protected void runScanAndShowWifi() {
         WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         wifi.startScan();
         IntentFilter i = new IntentFilter();
@@ -121,18 +104,14 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
                             MutePhoneService.scanResultToUniqueSSIDStringSet(wifisFoundList);
                     ssidsFoundArray = new String[SSIDStringSet.size()];
                     SSIDStringSet.toArray(ssidsFoundArray);
-                    FirstRunSSIDChooser firstRunSSIDChooser = new FirstRunSSIDChooser();
-                    firstRunSSIDChooser.setOptions(ssidsFoundArray);
-                    firstRunSSIDChooser.show(getFragmentManager(), "dosth");
+                    SSIDChooser SSIDChooser = new SSIDChooser();
+                    SSIDChooser.setOptions(ssidsFoundArray);
+                    SSIDChooser.show(getFragmentManager(), "dosth");
                 } else {
-                    // There seems to be a bug in 6.0 https://code.google.com/p/android/issues/detail?id=185370
-                    // getScanResults returns an empty list when Locationservice is turned off
-                    // Google says it's by design but:
-                    // this seems not to be an issue on 5.1.1 and 6.0.1 should be tested with 4.4,...
-                    // this would run counter to the intention of the App not to use Locationservice...
+                    // There seems to be a bug in 6.0 and up https://code.google.com/p/android/issues/detail?id=185370
+                    // this runs counter to the intention of the App not to use Locationservice...
                     // but we have to mitigate the Problem:
-                    String release = Build.VERSION.RELEASE;
-                    if (release.equals("6.0")) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         checkLocationServiceEnabled();
                     }
                 }
@@ -151,18 +130,23 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
                 permissionsGranted &= grantResult == PackageManager.PERMISSION_GRANTED;
             }
             if (permissionsGranted) {
-                if (getIDs().isEmpty()) {
-                    firstRunScanAndShowWifi();
+                if (getIDs().isEmpty() && isMutingEnabled()) {
+                    runScanAndShowWifi();
                 }
             }
-            //TODO: else { show explanation; }
+            // TODO: else { show explanation; }
         }
     }
 
     public final Set<String> getIDs() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        Set<String> ids = prefs.getStringSet(RULES_KEY, new HashSet<String>());
+        Set<String> ids = prefs.getStringSet(SettingKeys.RULES_UIDS, new HashSet<String>());
         return ids;
+    }
+
+    public boolean isMutingEnabled() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        return prefs.getBoolean(SettingKeys.MUTE_ENABLED, true);
     }
 
     @Override
@@ -180,31 +164,16 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
         super.onPause();
     }
 
-    public static boolean addID(Activity activity, String id) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
-        Set<String> ids = prefs.getStringSet(RULES_KEY, new HashSet<String>());
-        boolean success;
-        if (ids.contains(id)) {
-            success = false;
-        } else {
-            Set<String> idsToStore = new HashSet<>(ids);
-            idsToStore.add(id);
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putStringSet(RULES_KEY, idsToStore);
-            success = editor.commit();
-        }
-        return success;
-    }
-
     @Override
     public void onSelectItem(int i) {
+        String uid = UUID.randomUUID().toString();
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putString("ssid_0", ssidsFoundArray[i]);
+        editor.putString(SettingKeys.Wifi.SSID + "_" + uid, ssidsFoundArray[i]);
         editor.commit();
 
-        //This is setting 0
-        addID(this, "0");
+        PreferenceHelper.addID(this, uid);
 
         // Refresh the view
         Fragment f = getFragmentManager().findFragmentById(R.id.main_content);
@@ -212,21 +181,9 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
             ((EventsSettingsFragment) f).buildUI();
         }
 
-        // Enable the BootCompletedReceiver and WifiBroadcastReceiver and
-        // Start the Service
-        ComponentName receiver = new ComponentName(this, BootCompletedReceiver.class);
-        PackageManager pm = this.getPackageManager();
-        pm.setComponentEnabledSetting(receiver,
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                PackageManager.DONT_KILL_APP);
-
-        receiver = new ComponentName(this, WifiBroadcastReceiver.class);
-        pm.setComponentEnabledSetting(receiver,
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                PackageManager.DONT_KILL_APP);
-
+        // Start the Service -- Always set the WIFI_RULE_ADDED flag if WIFI-based rule is added.
         Intent mutePhoneService = new Intent(this, MutePhoneService.class);
-        mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.FIRST_RUN);
+        mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.WIFI_RULE_ADDED);
         startService(mutePhoneService);
     }
 
@@ -311,7 +268,7 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
             case REQUEST_CHECK_SETTINGS:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        firstRunScanAndShowWifi();
+                        runScanAndShowWifi();
 
                         break;
                     case Activity.RESULT_CANCELED:
@@ -324,5 +281,4 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
         }
 
     }
-
 }

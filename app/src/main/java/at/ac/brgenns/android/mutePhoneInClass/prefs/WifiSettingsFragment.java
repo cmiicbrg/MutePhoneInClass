@@ -10,6 +10,9 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import java.util.List;
 
@@ -19,6 +22,7 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
  * Created by Christoph on 27.05.2016.
  */
 public class WifiSettingsFragment extends PreferenceFragment {
+    private static final String TAG = WifiSettingsFragment.class.getSimpleName();
     String id = "0";
 
     @Override
@@ -27,18 +31,46 @@ public class WifiSettingsFragment extends PreferenceFragment {
         addPreferencesFromResource(R.xml.wifi_event_settings);
         final PreferenceScreen root = getPreferenceScreen();
 
+        id = ((WifiSettingsActivity) getActivity()).getSettingID();
+
+        setHasOptionsMenu(true);
+
         root.addPreference(getEnablePreference());
         root.addPreference(getRuleNamePreference());
         root.addPreference(getSSIDChooserPreference());
         root.addPreference(getSoundProfilePreference());
 
-        MuteSettingsActivity.addID(getActivity(), id);
+        PreferenceHelper.addID(getActivity(), id);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemID = item.getItemId();
+        int R_id_action_delete = R.id.action_delete;
+        switch (itemID) {
+            case android.R.id.home:
+                //TODO: check if Preferences are OK and delete already saved Preferences if not
+                getActivity().onBackPressed();
+                return true;
+            case R.id.action_delete:
+                // TODO: should we show a warning?
+                PreferenceHelper.deleteRule(getActivity(), id);
+                getActivity().onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_delete, menu);
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
     @NonNull
     private SwitchPreference getEnablePreference() {
         SwitchPreference enable = new SwitchPreference(getActivity());
-        enable.setKey("enable" + "_" + id);
+        enable.setKey(SettingKeys.Wifi.ENABLE + "_" + id);
         enable.setTitle(R.string.rule_enabled);
         enable.setDefaultValue(true);
         return enable;
@@ -47,17 +79,17 @@ public class WifiSettingsFragment extends PreferenceFragment {
     @NonNull
     private EditTextPreference getRuleNamePreference() {
         EditTextPreference name = new EditTextPreference(getActivity());
-        name.setKey("rule_name" + "_" + id);
+        name.setKey(SettingKeys.Wifi.RULE_NAME + "_" + id);
         name.setTitle(R.string.rule_name_title);
         name.setDefaultValue(getString(R.string.rule_name_default));
-        PreferenceChangeHelper.bindPreferenceSummaryToValue(name);
+        PreferenceHelper.bindPreferenceSummaryToValue(name);
         return name;
     }
 
     @NonNull
     private ListPreference getSSIDChooserPreference() {
         ListPreference ssid = new ListPreference(getActivity());
-        ssid.setKey("ssid" + "_" + id);
+        ssid.setKey(SettingKeys.Wifi.SSID + "_" + id);
         ssid.setTitle(R.string.mute_on_wifi);
         WifiManager wifi = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
 //        wifi.startScan();
@@ -72,19 +104,19 @@ public class WifiSettingsFragment extends PreferenceFragment {
         }
         ssid.setEntries(ssidsFoundArray);
         ssid.setEntryValues(ssidsFoundArray);
-        PreferenceChangeHelper.bindPreferenceSummaryToValue(ssid);
+        PreferenceHelper.bindPreferenceSummaryToValue(ssid);
         return ssid;
     }
 
     @NonNull
     private ListPreference getSoundProfilePreference() {
         ListPreference soundProfile = new ListPreference(getActivity());
-        soundProfile.setKey("soundProfile" + "_" + id);
+        soundProfile.setKey(SettingKeys.Wifi.SOUND_PROFILE + "_" + id);
         soundProfile.setTitle(R.string.sound_profile_title);
         soundProfile.setEntries(R.array.sound_profiles);
         soundProfile.setEntryValues(R.array.listvalues);
         soundProfile.setDefaultValue("0");
-        PreferenceChangeHelper.bindPreferenceSummaryToValue(soundProfile);
+        PreferenceHelper.bindPreferenceSummaryToValue(soundProfile);
         return soundProfile;
     }
 

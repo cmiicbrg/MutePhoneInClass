@@ -1,5 +1,6 @@
 package at.ac.brgenns.android.mutePhoneInClass.prefs;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -11,7 +12,9 @@ import android.util.Log;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
+import at.ac.brgenns.android.mutePhoneInClass.MutePhoneService;
 import at.ac.brgenns.android.mutePhoneInClass.R;
 
 /**
@@ -20,10 +23,6 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
 public class EventsSettingsFragment extends PreferenceFragment
         implements Preference.OnPreferenceChangeListener {
     private static final String TAG = EventsSettingsFragment.class.getSimpleName();
-//    private PreferenceDataSource datasource;
-//    private TreeMap<Long, WifiEvent> wifiEvents;
-//    private TreeMap<Long, EventProvider> eventProviders;
-//    private String[] ssidsFoundArray;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -34,41 +33,21 @@ public class EventsSettingsFragment extends PreferenceFragment
     @Override
     public void onResume() {
         super.onResume();
-//        datasource = new PreferenceDataSource(getActivity());
-//        datasource.open();
-//        wifiEvents = datasource.getAllWifiEvents();
-//        eventProviders = datasource.getAllEventProviders();
-//        if (wifiEvents.size() == 0 && eventProviders.size() == 0) {
-//            WifiManager wifi = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
-//            wifi.startScan();
-//            List<ScanResult> wifisFoundList = wifi.getScanResults();
-//
-//            ssidsFoundArray = new String[wifisFoundList.size()];
-//            for (int i = 0; i < wifisFoundList.size(); i++) {
-//                ssidsFoundArray[i] = wifisFoundList.get(i).SSID;
-//            }
-//            FirstRunSSIDChooser dialog = new FirstRunSSIDChooser();
-//            dialog.setOptions(ssidsFoundArray);
-//            dialog.show(getFragmentManager(), "dosth");
-//        }
         buildUI();
     }
 
     @Override
     public void onPause() {
-//        datasource.close();
         super.onPause();
     }
 
     protected void buildUI() {
         final PreferenceScreen root = getPreferenceScreen();
         root.removeAll();
-//        wifiEvents = datasource.getAllWifiEvents();
-//        eventProviders = datasource.getAllEventProviders();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        Set<String> IDs = prefs.getStringSet(MuteSettingsActivity.RULES_KEY, new HashSet<String>());
+        Set<String> IDs = prefs.getStringSet(SettingKeys.RULES_UIDS, new HashSet<String>());
         final SwitchPreference pEnable = new SwitchPreference(getActivity());
-        pEnable.setKey("mute_enabled");
+        pEnable.setKey(SettingKeys.MUTE_ENABLED);
         pEnable.setTitle(R.string.enable);
         pEnable.setDefaultValue(true);
         pEnable.setOnPreferenceChangeListener(this);
@@ -78,19 +57,22 @@ public class EventsSettingsFragment extends PreferenceFragment
         for (final String id : IDs) {
             final Preference p = new Preference(getActivity());
             p.setIcon(R.mipmap.ic_stat_name);
-            p.setTitle(prefs.getString("ssid" + "_" + id, ""));
-            String soundProfile_id = prefs.getString("soundProfile" + "_" + id, "0");
+            p.setTitle(prefs.getString(SettingKeys.Wifi.SSID + "_" + id, ""));
+            String soundProfile_id = prefs.getString(
+                    SettingKeys.Wifi.SOUND_PROFILE + "_" + id, "0");
             p.setSummary(getResources().getStringArray(R.array.sound_profiles)[Integer
                     .parseInt(soundProfile_id)]);
             p.setPersistent(false);
             p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
-                    WifiSettingsFragment fragment = new WifiSettingsFragment();
-                    fragment.id = id;
-                    getFragmentManager().beginTransaction()
-                            .replace(R.id.main_content, fragment).commit();
-//                    getContext().startActivity(new Intent(WifiSettingsFragment.class));
+//                    WifiSettingsFragment fragment = new WifiSettingsFragment();
+//                    fragment.id = id;
+//                    getFragmentManager().beginTransaction()
+//                            .replace(R.id.main_content, fragment).commit();
+                    Intent intent = new Intent(getActivity(), WifiSettingsActivity.class);
+                    intent.putExtra(MuteSettingsActivity.SETTING_ID, id);
+                    startActivity(intent);
                     return true;
                 }
             });
@@ -106,10 +88,16 @@ public class EventsSettingsFragment extends PreferenceFragment
         p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                WifiSettingsFragment fragment = new WifiSettingsFragment();
-                fragment.id = String.valueOf(p.hashCode());
-                getFragmentManager().beginTransaction()
-                        .replace(R.id.main_content, fragment).commit();
+
+                ((MuteSettingsActivity)getActivity()).runScanAndShowWifi();
+//                Intent intent = new Intent(getActivity(), WifiSettingsActivity.class);
+//                intent.putExtra(MuteSettingsActivity.SETTING_ID, id);
+//                startActivity(intent);
+
+//                WifiSettingsFragment fragment = new WifiSettingsFragment();
+//                fragment.id = String.valueOf(p.hashCode());
+//                getFragmentManager().beginTransaction()
+//                        .replace(R.id.main_content, fragment).commit();
                 return true;
             }
         });
@@ -118,13 +106,17 @@ public class EventsSettingsFragment extends PreferenceFragment
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
-        if (preference.getKey().equals("mute_enabled")) {
+        if (preference.getKey().equals(SettingKeys.MUTE_ENABLED)) {
             if (newValue.equals(Boolean.TRUE)) {
                 Log.d(TAG, "muting will be enabled, enabling Receivers");
-                // TODO
+                Intent mutePhoneService = new Intent(getActivity(), MutePhoneService.class);
+                mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.ENABLE);
+                getActivity().startService(mutePhoneService);
             } else {
                 Log.d(TAG, "muting will be disabled, disabling Receivers");
-                // TODO
+                Intent mutePhoneService = new Intent(getActivity(), MutePhoneService.class);
+                mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.DISABLE);
+                getActivity().startService(mutePhoneService);
             }
         }
         return true;

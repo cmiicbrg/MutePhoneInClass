@@ -20,11 +20,11 @@ import android.widget.Toast;
 
 import java.util.List;
 
-public class MuteActivity extends Activity implements FirstRunSSIDChooser.SSIDChosenListener {
+public class MuteActivity extends Activity implements SSIDChooser.SSIDChosenListener {
 
     public static final String SSID_PREFERENCES = "SSIDprefs";
     String wifisFoundArray[];
-    FirstRunSSIDChooser newFragment = new FirstRunSSIDChooser();
+    SSIDChooser newFragment = new SSIDChooser();
     String chosenSSID;
     AudioManager volume_state;
     List<ScanResult> wifisFoundList;
