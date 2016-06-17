@@ -19,4 +19,12 @@ public class SettingKeys {
         SSID,
         SOUND_PROFILE;
     }
+
+    public enum SoundProfile {
+        RULE_NAME,
+        ALARM_VOLUME,
+        MEDIA_VOLUME,
+        RINGER_VOLUME,
+        VIBRATE
+    }
 }

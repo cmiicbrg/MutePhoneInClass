@@ -210,10 +210,11 @@ public class MutePhoneService extends Service {
                         audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM) / 2), 0);
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
                 prefs.getInt(SettingKeys.LAST_MEDIA_VOLUME,
-                        audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM) / 2), 0);
+                        audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) / 2), 0);
         audioManager.setStreamVolume(AudioManager.STREAM_RING,
                 prefs.getInt(SettingKeys.LAST_RINGER_VOLUME,
-                        audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM) / 2), 0);
+                        audioManager.getStreamMaxVolume(AudioManager.STREAM_RING) / 2), 0);
+        deleteLastAudioSettings();
     }
 
     private void setSoundProfile(String id) {
@@ -267,6 +268,15 @@ public class MutePhoneService extends Service {
                     .putInt(SettingKeys.LAST_RINGER_MODE, audioManager.getRingerMode());
             editor.apply();
         }
+    }
+
+    private void deleteLastAudioSettings() {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.remove(SettingKeys.LAST_ALARM_VOLUME)
+                .remove(SettingKeys.LAST_MEDIA_VOLUME)
+                .remove(SettingKeys.LAST_RINGER_VOLUME)
+                .remove(SettingKeys.LAST_RINGER_MODE);
+        editor.apply();
     }
 
     private void cancelAlarm() {

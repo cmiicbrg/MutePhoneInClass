@@ -7,6 +7,8 @@ import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 
+import java.io.Serializable;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -73,7 +75,7 @@ public class PreferenceHelper {
         return success;
     }
 
-    public static boolean deleteRule(Activity activity, String id) {
+    public static <T extends Enum<T>>  boolean deleteRule(Activity activity, String id, Class<T> settingType ) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
         Set<String> ids = prefs.getStringSet(SettingKeys.RULES_UIDS, new HashSet<String>());
         boolean success = false;
@@ -81,7 +83,7 @@ public class PreferenceHelper {
             Set<String> idsToStore = new HashSet<>(ids);
             idsToStore.remove(id);
             SharedPreferences.Editor editor = prefs.edit();
-            for (SettingKeys.Wifi key : SettingKeys.Wifi.values()) {
+            for (T key : EnumSet.allOf(settingType)) {
                 String prefsKey = key.name() + "_" + id;
                 if (prefs.contains(prefsKey)) {
                     editor.remove(prefsKey);

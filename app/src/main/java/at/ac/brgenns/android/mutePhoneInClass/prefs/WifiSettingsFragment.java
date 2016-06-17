@@ -54,7 +54,7 @@ public class WifiSettingsFragment extends PreferenceFragment {
                 return true;
             case R.id.action_delete:
                 // TODO: should we show a warning?
-                PreferenceHelper.deleteRule(getActivity(), id);
+                PreferenceHelper.deleteRule(getActivity(), id, SettingKeys.Wifi.class);
                 getActivity().onBackPressed();
                 return true;
         }

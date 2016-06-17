@@ -8,6 +8,7 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
+import android.preference.RingtonePreference;
 import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
 import android.view.Menu;
@@ -28,16 +29,16 @@ public class SoundProfileSettingsFragment extends PreferenceFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.wifi_event_settings);
+        addPreferencesFromResource(R.xml.sound_profile_settings);
         final PreferenceScreen root = getPreferenceScreen();
 
-        id = ((WifiSettingsActivity) getActivity()).getSettingID();
+        id = ((SoundProfileSettingsActivity) getActivity()).getSettingID();
 
         setHasOptionsMenu(true);
 
-        root.addPreference(getEnablePreference());
-        root.addPreference(getRuleNamePreference());
-        root.addPreference(getSSIDChooserPreference());
+//        root.addPreference(getEnablePreference());
+//        root.addPreference(getRuleNamePreference());
+//        root.addPreference(getSSIDChooserPreference());
         root.addPreference(getSoundProfilePreference());
 
         PreferenceHelper.addID(getActivity(), id);
@@ -54,7 +55,7 @@ public class SoundProfileSettingsFragment extends PreferenceFragment {
                 return true;
             case R.id.action_delete:
                 // TODO: should we show a warning?
-                PreferenceHelper.deleteRule(getActivity(), id);
+                PreferenceHelper.deleteRule(getActivity(), id, SettingKeys.SoundProfile.class);
                 getActivity().onBackPressed();
                 return true;
         }
@@ -63,7 +64,9 @@ public class SoundProfileSettingsFragment extends PreferenceFragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_delete, menu);
+        if (id != "0" && id != "1") {
+            inflater.inflate(R.menu.menu_delete, menu);
+        }
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -109,14 +112,14 @@ public class SoundProfileSettingsFragment extends PreferenceFragment {
     }
 
     @NonNull
-    private ListPreference getSoundProfilePreference() {
-        ListPreference soundProfile = new ListPreference(getActivity());
+    private RingtonePreference getSoundProfilePreference() {
+        RingtonePreference soundProfile = new RingtonePreference(getActivity());
         soundProfile.setKey(SettingKeys.Wifi.SOUND_PROFILE + "_" + id);
         soundProfile.setTitle(R.string.sound_profile_title);
-        soundProfile.setEntries(R.array.sound_profiles);
-        soundProfile.setEntryValues(R.array.listvalues);
-        soundProfile.setDefaultValue("0");
-        PreferenceHelper.bindPreferenceSummaryToValue(soundProfile);
+//        soundProfile.setEntries(R.array.sound_profiles);
+//        soundProfile.setEntryValues(R.array.listvalues);
+//        soundProfile.setDefaultValue("0");
+//        PreferenceHelper.bindPreferenceSummaryToValue(soundProfile);
         return soundProfile;
     }
 
