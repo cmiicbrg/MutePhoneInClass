@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".prefs.WifiSettingsActivity">
+    tools:context=".prefs.SoundProfileSettingsActivity">
 
-    <include layout="@layout/content_wifi_settings"/>
+    <include layout="@layout/content_sound_profile_settings"/>
 
 </android.support.design.widget.CoordinatorLayout>

@@ -28,4 +28,5 @@
     </string>
     <string name="enable">Enable phone muting</string>
     <string name="rule_delete">Delete rule</string>
+    <string name="sound_profile_edit">Edit Sound Profile</string>
 </resources>

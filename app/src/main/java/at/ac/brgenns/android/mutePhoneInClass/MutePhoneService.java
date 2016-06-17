@@ -151,11 +151,6 @@ public class MutePhoneService extends Service {
         return START_STICKY;
     }
 
-    private void unMute() {
-        audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-        //TODO: if all was silent ...
-    }
-
     private boolean muteBasedOnScanResult() {
         boolean mute = false;
         List<ScanResult> scanResults = wifiManager.getScanResults();
@@ -207,20 +202,70 @@ public class MutePhoneService extends Service {
         prefIDs = prefs.getStringSet(SettingKeys.RULES_UIDS, new HashSet<String>());
     }
 
+    private void unMute() {
+        audioManager.setRingerMode(
+                prefs.getInt(SettingKeys.LAST_RINGER_MODE, AudioManager.RINGER_MODE_NORMAL));
+        audioManager.setStreamVolume(AudioManager.STREAM_ALARM,
+                prefs.getInt(SettingKeys.LAST_ALARM_VOLUME,
+                        audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM) / 2), 0);
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
+                prefs.getInt(SettingKeys.LAST_MEDIA_VOLUME,
+                        audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM) / 2), 0);
+        audioManager.setStreamVolume(AudioManager.STREAM_RING,
+                prefs.getInt(SettingKeys.LAST_RINGER_VOLUME,
+                        audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM) / 2), 0);
+    }
+
     private void setSoundProfile(String id) {
         // always set the SoundProfile or check otherwise because the user might have changed the sound options
-
-        if (id.equals("0")) {
+        if (id.equals("0") &&
+                shouldAdjustAudioSettings(-1, 0, 0, AudioManager.RINGER_MODE_SILENT)) {
+            saveLastAudioSettings();
             audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-        } else if (id.equals("1")) {
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
+        } else if (id.equals("1") &&
+                shouldAdjustAudioSettings(0, 0, 0, AudioManager.RINGER_MODE_SILENT)) {
+            saveLastAudioSettings();
+            audioManager.setStreamVolume(AudioManager.STREAM_ALARM, 0, 0);
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
             audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-            // TODO: ...
         } else {
             // load SOUND_PROFILE from preferences -> not implemented yet
 //            SharedPreferences prefs =
 //                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 //            Set<String> IDs =
 //                    prefs.getStringSet(MuteSettingsActivity.RULES_UIDS, new HashSet<String>());
+        }
+    }
+
+    private boolean shouldAdjustAudioSettings(int alarmVolume, int mediaVolume, int ringerVolume,
+                                              int ringerMode) {
+        boolean settingsOK = true;
+        settingsOK &= audioManager.getRingerMode() == ringerMode;
+        if (alarmVolume >= 0 && settingsOK) {
+            settingsOK = audioManager.getStreamVolume(AudioManager.STREAM_ALARM) == alarmVolume;
+        }
+        if (mediaVolume >= 0 && settingsOK) {
+            settingsOK = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) == mediaVolume;
+        }
+        if (ringerVolume >= 0 && settingsOK) {
+            settingsOK = audioManager.getStreamVolume(AudioManager.STREAM_RING) == alarmVolume;
+        }
+
+        return !settingsOK;
+    }
+
+    private void saveLastAudioSettings() {
+        if (!prefs.contains(SettingKeys.LAST_RINGER_MODE)) {
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putInt(SettingKeys.LAST_ALARM_VOLUME,
+                    audioManager.getStreamVolume(AudioManager.STREAM_ALARM))
+                    .putInt(SettingKeys.LAST_MEDIA_VOLUME,
+                            audioManager.getStreamVolume(AudioManager.STREAM_MUSIC))
+                    .putInt(SettingKeys.LAST_RINGER_VOLUME,
+                            audioManager.getStreamVolume(AudioManager.STREAM_RING))
+                    .putInt(SettingKeys.LAST_RINGER_MODE, audioManager.getRingerMode());
+            editor.apply();
         }
     }
 
