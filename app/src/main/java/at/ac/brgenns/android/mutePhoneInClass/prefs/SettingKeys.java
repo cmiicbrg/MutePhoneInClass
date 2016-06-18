@@ -21,9 +21,13 @@ public class SettingKeys {
     }
 
     public enum SoundProfile {
+
         RULE_NAME,
+//        ENABLE_ALARM_VOLUME,
         ALARM_VOLUME,
+//        ENABLE_MEDIA_VOLUME,
         MEDIA_VOLUME,
+//        ENABLE_RINGER_VOLUME,
         RINGER_VOLUME,
         VIBRATE
     }

@@ -1,21 +1,20 @@
 package at.ac.brgenns.android.mutePhoneInClass.prefs;
 
 import android.content.Context;
-import android.net.wifi.ScanResult;
-import android.net.wifi.WifiManager;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
-import android.preference.ListPreference;
+import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
-import android.preference.RingtonePreference;
 import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-import java.util.List;
+import com.pavelsikun.seekbarpreference.SeekBarPreference;
 
 import at.ac.brgenns.android.mutePhoneInClass.R;
 
@@ -25,6 +24,7 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
 public class SoundProfileSettingsFragment extends PreferenceFragment {
     private static final String TAG = SoundProfileSettingsFragment.class.getSimpleName();
     String id = "0";
+    private AudioManager audioManager;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -35,11 +35,29 @@ public class SoundProfileSettingsFragment extends PreferenceFragment {
         id = ((SoundProfileSettingsActivity) getActivity()).getSettingID();
 
         setHasOptionsMenu(true);
+        audioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
 
-//        root.addPreference(getEnablePreference());
-//        root.addPreference(getRuleNamePreference());
-//        root.addPreference(getSSIDChooserPreference());
-        root.addPreference(getSoundProfilePreference());
+        root.addPreference(getSoundProfileNamePreference());
+
+        root.addPreference(getEnableVolumePreference(getString(R.string.enable_media_volume_change),
+                SettingKeys.SoundProfile.MEDIA_VOLUME, -1));
+        root.addPreference(
+                getSoundProfilePreference(getString(R.string.media_volume), SettingKeys.SoundProfile.MEDIA_VOLUME,
+                        -1, AudioManager.STREAM_MUSIC));
+
+        root.addPreference(getEnableVolumePreference(getString(R.string.enable_alarm_volume_change),
+                SettingKeys.SoundProfile.ALARM_VOLUME, -1));
+        root.addPreference(
+                getSoundProfilePreference(getString(R.string.alarm_volume), SettingKeys.SoundProfile.ALARM_VOLUME,
+                        -1, AudioManager.STREAM_ALARM));
+
+        root.addPreference(getEnableVolumePreference(getString(R.string.enable_ringtone_volume_change),
+                SettingKeys.SoundProfile.RINGER_VOLUME, 0));
+        root.addPreference(
+                getSoundProfilePreference(getString(R.string.ringtone_volume), SettingKeys.SoundProfile.RINGER_VOLUME,
+                        0, AudioManager.STREAM_RING));
+
+        root.addPreference(getVibrateEnablePreference());
 
         PreferenceHelper.addID(getActivity(), id);
     }
@@ -47,7 +65,6 @@ public class SoundProfileSettingsFragment extends PreferenceFragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemID = item.getItemId();
-        int R_id_action_delete = R.id.action_delete;
         switch (itemID) {
             case android.R.id.home:
                 //TODO: check if Preferences are OK and delete already saved Preferences if not
@@ -71,56 +88,87 @@ public class SoundProfileSettingsFragment extends PreferenceFragment {
     }
 
     @NonNull
-    private SwitchPreference getEnablePreference() {
-        SwitchPreference enable = new SwitchPreference(getActivity());
-        enable.setKey(SettingKeys.Wifi.ENABLE + "_" + id);
-        enable.setTitle(R.string.rule_enabled);
-        enable.setDefaultValue(true);
-        return enable;
-    }
-
-    @NonNull
-    private EditTextPreference getRuleNamePreference() {
+    private EditTextPreference getSoundProfileNamePreference() {
         EditTextPreference name = new EditTextPreference(getActivity());
         name.setKey(SettingKeys.Wifi.RULE_NAME + "_" + id);
         name.setTitle(R.string.rule_name_title);
         name.setDefaultValue(getString(R.string.rule_name_default));
+
         PreferenceHelper.bindPreferenceSummaryToValue(name);
+        if (name.getSummary().toString().isEmpty()) {
+            name.setSummary(getString(R.string.rule_name_default));
+        }
         return name;
     }
 
     @NonNull
-    private ListPreference getSSIDChooserPreference() {
-        ListPreference ssid = new ListPreference(getActivity());
-        ssid.setKey(SettingKeys.Wifi.SSID + "_" + id);
-        ssid.setTitle(R.string.mute_on_wifi);
-        WifiManager wifi = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
-//        wifi.startScan();
-        //TODO: when editing a setting we don't want to search for WIFIS or add the old WIFI to the list
-        //TODO: Use a receiver...
-        //TODO: on 6.0 check if we have to enable Locationservice
-        List<ScanResult> wifisFoundList = wifi.getScanResults();
-        String[] ssidsFoundArray = new String[wifisFoundList.size()];
-//        ssidsFoundArray[0] = ssid.getValue();
-        for (int i = 0; i < wifisFoundList.size(); i++) {
-            ssidsFoundArray[i] = wifisFoundList.get(i).SSID;
-        }
-        ssid.setEntries(ssidsFoundArray);
-        ssid.setEntryValues(ssidsFoundArray);
-        PreferenceHelper.bindPreferenceSummaryToValue(ssid);
-        return ssid;
+    private SwitchPreference getEnableVolumePreference(String title,
+                                                       final SettingKeys.SoundProfile key,
+                                                       final int defaultVolume) {
+        SwitchPreference enable = new SwitchPreference(getActivity());
+        String keyStr = "ENABLE_" + key + "_" + id;
+        enable.setPersistent(false);
+        enable.setKey("ENABLE_" + key + "_" + id);
+        enable.setTitle(title);
+
+        boolean defaultValue = PreferenceManager
+                .getDefaultSharedPreferences(getActivity())
+                .getInt(keyStr, defaultVolume) >= 0;
+        enable.setDefaultValue(defaultValue);
+        enable.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                if (newValue instanceof Boolean) {
+                    boolean newBool = ((Boolean) newValue).booleanValue();
+                    SeekBarPreference p = (SeekBarPreference) findPreference(key + "_" + id);
+
+                    if (newBool) {
+                        p.setEnabled(newBool);
+                        p.setMinValue(0);
+                        p.setCurrentValue(defaultVolume);
+                    } else {
+                        p.setMinValue(-1);
+                        p.setCurrentValue(-1);
+                        p.setEnabled(newBool);
+                    }
+                }
+                return true;
+            }
+        });
+
+        return enable;
     }
 
     @NonNull
-    private RingtonePreference getSoundProfilePreference() {
-        RingtonePreference soundProfile = new RingtonePreference(getActivity());
-        soundProfile.setKey(SettingKeys.Wifi.SOUND_PROFILE + "_" + id);
-        soundProfile.setTitle(R.string.sound_profile_title);
+    private SeekBarPreference getSoundProfilePreference(String title, SettingKeys.SoundProfile key,
+                                                        int defaultValue, int streamType) {
+        SeekBarPreference volume = new SeekBarPreference(getActivity());
+        volume.setKey(key + "_" + id);
+        volume.setTitle(title);
 //        soundProfile.setEntries(R.array.sound_profiles);
-//        soundProfile.setEntryValues(R.array.listvalues);
-//        soundProfile.setDefaultValue("0");
-//        PreferenceHelper.bindPreferenceSummaryToValue(soundProfile);
-        return soundProfile;
+////        soundProfile.setEntryValues(R.array.listvalues);
+
+        volume.setMinValue(defaultValue < 0 ? -1 : 0);
+        volume.setMaxValue(audioManager.getStreamMaxVolume(streamType));
+        volume.setDialogEnabled(false);
+
+        boolean enabled = PreferenceManager
+                .getDefaultSharedPreferences(volume.getContext())
+                .getInt(volume.getKey(), defaultValue) >= 0;
+
+        volume.setCurrentValue(defaultValue);
+        volume.setEnabled(enabled);
+
+        return volume;
+    }
+
+    @NonNull
+    private SwitchPreference getVibrateEnablePreference() {
+        SwitchPreference enable = new SwitchPreference(getActivity());
+        enable.setKey(SettingKeys.SoundProfile.VIBRATE + "_" + id);
+        enable.setTitle("Vibrate");
+        enable.setDefaultValue(false);
+        return enable;
     }
 
 }

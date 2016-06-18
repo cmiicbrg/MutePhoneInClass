@@ -41,6 +41,18 @@
             android:parentActivityName=".prefs.MuteSettingsActivity">
         </activity>
 
+        <activity
+            android:name=".prefs.SoundProfileSettingsActivity"
+            android:label="@string/sound_profile_edit"
+            android:parentActivityName=".prefs.SoundProfileManageActivity">
+        </activity>
+
+        <activity
+            android:name=".prefs.SoundProfileManageActivity"
+            android:label="@string/sound_profile_edit"
+            android:parentActivityName=".prefs.MuteSettingsActivity">
+        </activity>
+
         <receiver
             android:name=".WifiBroadcastReceiver"
             android:enabled="false">
