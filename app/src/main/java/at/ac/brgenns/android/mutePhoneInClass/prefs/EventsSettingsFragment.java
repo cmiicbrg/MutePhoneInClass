@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
@@ -12,7 +13,6 @@ import android.util.Log;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 import at.ac.brgenns.android.mutePhoneInClass.MutePhoneService;
 import at.ac.brgenns.android.mutePhoneInClass.R;
@@ -23,6 +23,8 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
 public class EventsSettingsFragment extends PreferenceFragment
         implements Preference.OnPreferenceChangeListener {
     private static final String TAG = EventsSettingsFragment.class.getSimpleName();
+
+    private DurationPickerPreference pDisableFor;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -43,7 +45,10 @@ public class EventsSettingsFragment extends PreferenceFragment
 
     protected void buildUI() {
         final PreferenceScreen root = getPreferenceScreen();
+
         root.removeAll();
+
+        //add Enable/Disable Prefrence
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         Set<String> IDs = prefs.getStringSet(SettingKeys.RULES_UIDS, new HashSet<String>());
         final SwitchPreference pEnable = new SwitchPreference(getActivity());
@@ -54,6 +59,21 @@ public class EventsSettingsFragment extends PreferenceFragment
         root.addPreference(pEnable);
         // TODO final Preference pDisableFor... if disabled it should be possible to set for how long
 
+        pDisableFor = new DurationPickerPreference(getActivity(), null);
+
+        pDisableFor.setIcon(R.drawable.ic_schedule_black_24dp);
+        pDisableFor.setKey(SettingKeys.DISABLED_FOR);
+//        pDisableFor.setTitle(R.string.disable_for);
+        pDisableFor.setDialogTitle(R.string.disable_for);
+        pDisableFor.setEnabled(!prefs.getBoolean(SettingKeys.MUTE_ENABLED, true));
+        pDisableFor.setDefaultValue(0);
+        pDisableFor.setOnPreferenceChangeListener(this);
+        root.addPreference(pDisableFor);
+
+        PreferenceCategory rules = new PreferenceCategory(getActivity());
+        rules.setTitle("Rules");
+        root.addPreference(rules);
+
         for (final String id : IDs) {
             if (prefs.contains(SettingKeys.Wifi.SSID + "_" + id)) {
                 final Preference p = new Preference(getActivity());
@@ -61,8 +81,17 @@ public class EventsSettingsFragment extends PreferenceFragment
                 p.setTitle(prefs.getString(SettingKeys.Wifi.SSID + "_" + id, ""));
                 String soundProfile_id = prefs.getString(
                         SettingKeys.Wifi.SOUND_PROFILE + "_" + id, "0");
-                p.setSummary(getResources().getStringArray(R.array.sound_profiles)[Integer
-                        .parseInt(soundProfile_id)]);
+                String summary = "";
+                if (soundProfile_id == "0") {
+                    summary = getString(R.string.alarms_only);
+                } else if (soundProfile_id == "1") {
+                    summary = getString(R.string.total_silence);
+                } else {
+                    summary = prefs.getString(
+                            SettingKeys.SoundProfile.RULE_NAME + "_" + soundProfile_id,
+                            getString(R.string.alarms_only));
+                }
+                p.setSummary(summary);
                 p.setPersistent(false);
                 p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
@@ -73,32 +102,26 @@ public class EventsSettingsFragment extends PreferenceFragment
                         return true;
                     }
                 });
-                root.addPreference(p);
+                rules.addPreference(p);
             }
         }
 
-        //TODO add Eventproviders
-        final Preference p = new Preference(getActivity());
-        p.setIcon(R.drawable.ic_add_black_24dp);
-        p.setTitle(R.string.add_rule);
-        p.setPersistent(false);
-        p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+        final Preference pAdd = new Preference(getActivity());
+        pAdd.setIcon(R.drawable.ic_add_black_24dp);
+        pAdd.setTitle(R.string.add_rule);
+        pAdd.setPersistent(false);
+        pAdd.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-
                 ((MuteSettingsActivity) getActivity()).runScanAndShowWifi();
-//                Intent intent = new Intent(getActivity(), WifiSettingsActivity.class);
-//                intent.putExtra(MuteSettingsActivity.SETTING_ID, id);
-//                startActivity(intent);
-
-//                WifiSettingsFragment fragment = new WifiSettingsFragment();
-//                fragment.id = String.valueOf(p.hashCode());
-//                getFragmentManager().beginTransaction()
-//                        .replace(R.id.main_content, fragment).commit();
                 return true;
             }
         });
-        root.addPreference(p);
+        rules.addPreference(pAdd);
+
+        PreferenceCategory soundCat = new PreferenceCategory(getActivity());
+        soundCat.setTitle("Sound profiles");
+        root.addPreference(soundCat);
 
         final Preference ps = new Preference(getActivity());
         ps.setIcon(R.drawable.ic_volume_off_black_24dp);
@@ -112,7 +135,16 @@ public class EventsSettingsFragment extends PreferenceFragment
                 return true;
             }
         });
-        root.addPreference(ps);
+        soundCat.addPreference(ps);
+
+        final Preference pw = new Preference(getActivity());
+        pw.setIcon(R.drawable.ic_warning_black_24dp);
+//        pw.setTitle(R.string.sound_profile_manage);
+        pw.setSummary(R.string.warning_sound_setting);
+        pw.setSelectable(false);
+        pw.setPersistent(false);
+
+        soundCat.addPreference(pw);
     }
 
     @Override
@@ -123,11 +155,10 @@ public class EventsSettingsFragment extends PreferenceFragment
                 Intent mutePhoneService = new Intent(getActivity(), MutePhoneService.class);
                 mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.ENABLE);
                 getActivity().startService(mutePhoneService);
+                pDisableFor.setEnabled(false);
             } else {
-                Log.d(TAG, "muting will be disabled, disabling Receivers");
-                Intent mutePhoneService = new Intent(getActivity(), MutePhoneService.class);
-                mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.DISABLE);
-                getActivity().startService(mutePhoneService);
+                pDisableFor.setEnabled(true);
+                pDisableFor.show();
             }
         }
         return true;

@@ -1,12 +1,14 @@
 package at.ac.brgenns.android.mutePhoneInClass.prefs;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
@@ -14,7 +16,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import at.ac.brgenns.android.mutePhoneInClass.R;
 
@@ -113,8 +118,26 @@ public class WifiSettingsFragment extends PreferenceFragment {
         ListPreference soundProfile = new ListPreference(getActivity());
         soundProfile.setKey(SettingKeys.Wifi.SOUND_PROFILE + "_" + id);
         soundProfile.setTitle(R.string.sound_profile_title);
-        soundProfile.setEntries(R.array.sound_profiles);
-        soundProfile.setEntryValues(R.array.listvalues);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        Set<String> IDs = prefs.getStringSet(SettingKeys.RULES_UIDS, new HashSet<String>());
+        String[] entries = new String[IDs.size() + 2];
+        String[] values = new String[IDs.size() + 2];
+        int i = 0;
+        entries[i] = getString(R.string.alarms_only);
+        values[i++] = "0";
+        entries[i] = getString(R.string.total_silence);
+        values[i++] = "1";
+
+        for (final String id : IDs) {
+            if (prefs.contains(SettingKeys.SoundProfile.RINGER_VOLUME + "_" + id)) {
+                entries[i] = prefs.getString(SettingKeys.SoundProfile.RULE_NAME + "_" + id,
+                        getString(R.string.rule_name_default));
+                values[i++] = id;
+            }
+        }
+
+        soundProfile.setEntries(Arrays.copyOfRange(entries, 0, i));
+        soundProfile.setEntryValues(Arrays.copyOfRange(values, 0, i));
         soundProfile.setDefaultValue("0");
         PreferenceHelper.bindPreferenceSummaryToValue(soundProfile);
         return soundProfile;

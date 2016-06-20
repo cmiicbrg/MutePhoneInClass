@@ -40,4 +40,7 @@
     <string name="enable_ringtone_volume_change">Enable ringtone volume change</string>
     <string name="enable_alarm_volume_change">Enable alarm volume change</string>
     <string name="enable_media_volume_change">Enable media volume change</string>
+    <string name="warning_sound_setting">The sound settings, that were active when a rule gets applied will be restored, either on disabling or when no rule applies!</string>
+    <string name="disable_for">Disable for</string>
+    <string name="ever">ever</string>
 </resources>

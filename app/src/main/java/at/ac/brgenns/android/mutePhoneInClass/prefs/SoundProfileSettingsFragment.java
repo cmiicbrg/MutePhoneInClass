@@ -1,6 +1,7 @@
 package at.ac.brgenns.android.mutePhoneInClass.prefs;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
@@ -42,19 +43,23 @@ public class SoundProfileSettingsFragment extends PreferenceFragment {
         root.addPreference(getEnableVolumePreference(getString(R.string.enable_media_volume_change),
                 SettingKeys.SoundProfile.MEDIA_VOLUME, -1));
         root.addPreference(
-                getSoundProfilePreference(getString(R.string.media_volume), SettingKeys.SoundProfile.MEDIA_VOLUME,
+                getSoundProfilePreference(getString(R.string.media_volume),
+                        SettingKeys.SoundProfile.MEDIA_VOLUME,
                         -1, AudioManager.STREAM_MUSIC));
 
         root.addPreference(getEnableVolumePreference(getString(R.string.enable_alarm_volume_change),
                 SettingKeys.SoundProfile.ALARM_VOLUME, -1));
         root.addPreference(
-                getSoundProfilePreference(getString(R.string.alarm_volume), SettingKeys.SoundProfile.ALARM_VOLUME,
+                getSoundProfilePreference(getString(R.string.alarm_volume),
+                        SettingKeys.SoundProfile.ALARM_VOLUME,
                         -1, AudioManager.STREAM_ALARM));
 
-        root.addPreference(getEnableVolumePreference(getString(R.string.enable_ringtone_volume_change),
-                SettingKeys.SoundProfile.RINGER_VOLUME, 0));
         root.addPreference(
-                getSoundProfilePreference(getString(R.string.ringtone_volume), SettingKeys.SoundProfile.RINGER_VOLUME,
+                getEnableVolumePreference(getString(R.string.enable_ringtone_volume_change),
+                        SettingKeys.SoundProfile.RINGER_VOLUME, 0));
+        root.addPreference(
+                getSoundProfilePreference(getString(R.string.ringtone_volume),
+                        SettingKeys.SoundProfile.RINGER_VOLUME,
                         0, AudioManager.STREAM_RING));
 
         root.addPreference(getVibrateEnablePreference());
@@ -106,14 +111,14 @@ public class SoundProfileSettingsFragment extends PreferenceFragment {
                                                        final SettingKeys.SoundProfile key,
                                                        final int defaultVolume) {
         SwitchPreference enable = new SwitchPreference(getActivity());
-        String keyStr = "ENABLE_" + key + "_" + id;
+//        String keyStr = "ENABLE_" + key + "_" + id;
         enable.setPersistent(false);
         enable.setKey("ENABLE_" + key + "_" + id);
         enable.setTitle(title);
-
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         boolean defaultValue = PreferenceManager
                 .getDefaultSharedPreferences(getActivity())
-                .getInt(keyStr, defaultVolume) >= 0;
+                .getInt(key + "_" + id, defaultVolume) >= 0;
         enable.setDefaultValue(defaultValue);
         enable.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override

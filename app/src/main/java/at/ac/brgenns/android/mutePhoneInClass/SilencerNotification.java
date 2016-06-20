@@ -47,7 +47,6 @@ public class SilencerNotification {
         // TODO: Remove this if your notification has no relevant thumbnail.
 //        final Bitmap picture = BitmapFactory.decodeResource(res, R.drawable.example_picture);
 
-
         final String ticker = exampleString;
         final String title = res.getString(
                 R.string.silencer_notification_title, exampleString);
@@ -62,8 +61,9 @@ public class SilencerNotification {
 
                 // Set appropriate defaults for the notification light, sound,
                 // and vibration.
-                .setDefaults(Notification.DEFAULT_LIGHTS)
-                .setVibrate(new long[]{0l})
+                .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND)
+                .setVibrate(new long[]{0, 0})
+                .setOnlyAlertOnce(true)
 
                 // Set required fields, including the small icon, the
                 // notification title, and text.
@@ -75,7 +75,7 @@ public class SilencerNotification {
 
                 // Use a default priority (recognized on devices running Android
                 // 4.1 or later)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
 
                 // Provide a large icon, shown with the notification in the
                 // notification drawer on devices running Android 3.0 or later.
@@ -104,12 +104,13 @@ public class SilencerNotification {
                         .setBigContentTitle(title)
                         .setSummaryText("Dummy summary text"))
 
-                .addAction(R.drawable.ic_volume_off_black_24dp, res.getString(R.string.action_unmute), pendingIntent1)
-                .addAction(R.drawable.ic_add_black_24dp, res.getString(R.string.action_settings), pendingIntent2)
+                .addAction(R.drawable.ic_volume_off_black_24dp,
+                        res.getString(R.string.action_unmute), pendingIntent1)
+                .addAction(R.drawable.ic_add_black_24dp, res.getString(R.string.action_settings),
+                        pendingIntent2)
 
-        // Automatically dismiss the notification when it is touched.
-        .setAutoCancel(false);
-
+                // Automatically dismiss the notification when it is touched.
+                .setAutoCancel(false);
 
         notify(context, builder.build());
     }

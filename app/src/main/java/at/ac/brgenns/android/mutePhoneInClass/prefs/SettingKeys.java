@@ -12,6 +12,7 @@ public class SettingKeys {
     public static final String LAST_ALARM_VOLUME = "last_alarm_volume";
     public static final String LAST_RINGER_VOLUME = "last_ringer_volume";
     public static final String LAST_RINGER_MODE = "last_vibrate_state";
+    public static final String DISABLED_FOR = "disabled_for";
 
     public enum Wifi {
         ENABLE,
@@ -21,13 +22,9 @@ public class SettingKeys {
     }
 
     public enum SoundProfile {
-
         RULE_NAME,
-//        ENABLE_ALARM_VOLUME,
         ALARM_VOLUME,
-//        ENABLE_MEDIA_VOLUME,
         MEDIA_VOLUME,
-//        ENABLE_RINGER_VOLUME,
         RINGER_VOLUME,
         VIBRATE
     }

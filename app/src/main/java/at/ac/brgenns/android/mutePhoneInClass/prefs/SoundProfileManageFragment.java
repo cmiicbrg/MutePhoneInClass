@@ -21,7 +21,7 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
 public class SoundProfileManageFragment extends PreferenceFragment {
 
     private static final String TAG = SoundProfileSettingsFragment.class.getSimpleName();
-//    String id = "0";
+    //    String id = "0";
     private AudioManager audioManager;
     private SharedPreferences prefs;
 
@@ -77,13 +77,6 @@ public class SoundProfileManageFragment extends PreferenceFragment {
                 getVolumeString(SettingKeys.SoundProfile.ALARM_VOLUME, "0", -1) + ", " +
                 getString(R.string.ringtone_volume) + ": " +
                 getVolumeString(SettingKeys.SoundProfile.RINGER_VOLUME, "0", 0));
-//        p0.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-//            @Override
-//            public boolean onPreferenceClick(Preference preference) {
-//                startProfileSettingsActivity("0");
-//                return true;
-//            }
-//        });
         root.addPreference(p0);
         final Preference p1 = new Preference(getActivity());
         p1.setIcon(R.drawable.ic_volume_off_black_24dp);
@@ -96,13 +89,6 @@ public class SoundProfileManageFragment extends PreferenceFragment {
                 getVolumeString(SettingKeys.SoundProfile.ALARM_VOLUME, "1", 0) + ", " +
                 getString(R.string.ringtone_volume) + ": " +
                 getVolumeString(SettingKeys.SoundProfile.RINGER_VOLUME, "1", 0));
-//        p1.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-//            @Override
-//            public boolean onPreferenceClick(Preference preference) {
-//                startProfileSettingsActivity("1");
-//                return true;
-//            }
-//        });
         root.addPreference(p1);
 
         Set<String> IDs = prefs.getStringSet(SettingKeys.RULES_UIDS, new HashSet<String>());
@@ -110,9 +96,8 @@ public class SoundProfileManageFragment extends PreferenceFragment {
             if (prefs.contains(SettingKeys.SoundProfile.RINGER_VOLUME + "_" + id)) {
                 final Preference p = new Preference(getActivity());
                 p.setIcon(R.drawable.ic_volume_off_black_24dp);
-                p.setTitle(prefs.getString(SettingKeys.SoundProfile.RULE_NAME + "_" + id, getString(R.string.rule_name_default)));
-//                String soundProfile_id = prefs.getString(
-//                        SettingKeys.Wifi.SOUND_PROFILE + "_" + id, "0");
+                p.setTitle(prefs.getString(SettingKeys.SoundProfile.RULE_NAME + "_" + id,
+                        getString(R.string.rule_name_default)));
                 p.setSummary(getString(R.string.media_volume) + ": " +
                         getVolumeString(SettingKeys.SoundProfile.MEDIA_VOLUME, id, -1) + ", " +
                         getString(R.string.alarm_volume) + ": " +
@@ -123,7 +108,8 @@ public class SoundProfileManageFragment extends PreferenceFragment {
                 p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        Intent intent = new Intent(getActivity(), SoundProfileSettingsActivity.class);
+                        Intent intent =
+                                new Intent(getActivity(), SoundProfileSettingsActivity.class);
                         intent.putExtra(MuteSettingsActivity.SETTING_ID, id);
                         startActivity(intent);
                         return true;

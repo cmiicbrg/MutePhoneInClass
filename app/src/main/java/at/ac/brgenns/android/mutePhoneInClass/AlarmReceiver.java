@@ -12,8 +12,9 @@ public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(AlarmReceiver.class.getSimpleName(), "Scheduled alarm received");
-        Intent service = new Intent(context, MutePhoneService.class);
-        service.putExtra(MutePhoneService.TASK, MutePhoneService.ALARM);
+         Intent service = new Intent(context, MutePhoneService.class);
+        service.putExtra(MutePhoneService.TASK,
+                intent.getIntExtra(MutePhoneService.TASK, MutePhoneService.ALARM));
         context.startService(service);
     }
 }
