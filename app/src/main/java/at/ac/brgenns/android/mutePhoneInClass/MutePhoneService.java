@@ -52,6 +52,7 @@ public class MutePhoneService extends Service {
     private NetworkInfo activeInfo;
     private SharedPreferences prefs;
     private Set<String> prefIDs;
+    private String reason = "unknown";
 
     @Override
     public void onCreate() {
@@ -78,9 +79,6 @@ public class MutePhoneService extends Service {
 
         if (hasWifiRules() && prefs.getBoolean(SettingKeys.MUTE_ENABLED, true) ||
                 task == ENABLE) {
-            // TODO show the Silencernotification only if the phone was muted and the user might not be aware
-            SilencerNotification.notify(this, DateFormat
-                    .getDateTimeInstance().format(new Date()), 1);
 
             switch (task) {
                 case WIFI_RULE_ADDED:
@@ -188,6 +186,7 @@ public class MutePhoneService extends Service {
                     String cSoundProfile =
                             prefs.getString(SettingKeys.Wifi.SOUND_PROFILE + "_" + id, "0");
                     Log.d(TAG, cSoundProfile);
+                    reason = prefs.getString(cKey, "");
                     setSoundProfile(cSoundProfile);
                     mute = true;
                 }
@@ -211,6 +210,7 @@ public class MutePhoneService extends Service {
                         prefs.getBoolean(SettingKeys.Wifi.ENABLE + "_" + id, true) &&
                         !mute) {
                     if (prefs.getString(SettingKeys.Wifi.SSID + "_" + id, "").equals(currentSSID)) {
+                        reason = currentSSID;
                         setSoundProfile(
                                 prefs.getString(SettingKeys.Wifi.SOUND_PROFILE + "_" + id, "0"));
                         mute = true;
@@ -305,7 +305,9 @@ public class MutePhoneService extends Service {
     }
 
     private void saveLastAudioSettings() {
+
         if (!prefs.contains(SettingKeys.LAST_RINGER_MODE)) {
+            SilencerNotification.notify(this, reason, 1);
             SharedPreferences.Editor editor = prefs.edit();
             editor.putInt(SettingKeys.LAST_ALARM_VOLUME,
                     audioManager.getStreamVolume(AudioManager.STREAM_ALARM))

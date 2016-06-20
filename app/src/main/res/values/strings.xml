@@ -21,11 +21,10 @@
     <string name="title_activity_settings">SettingsActivity</string>
     <string name="alarms_only">Alarms only</string>
     <string name="add_rule">Add rule</string>
-    <string name="silencer_notification_title">Silencer: %1$s</string>
+    <string name="silencer_notification_title">Mute phone in class</string>
 
     <!-- TODO: remove this placeholder text -->
-    <string name="silencer_notification_text">%1$s: The phone was muted because ...
-    </string>
+    <string name="silencer_notification_text">The phone was muted because %1$s has been found.</string>
     <string name="enable">Enable phone muting</string>
     <string name="rule_delete">Delete rule</string>
     <string name="sound_profile_edit">Edit sound profile</string>
