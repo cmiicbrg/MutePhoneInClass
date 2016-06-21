@@ -96,12 +96,12 @@ public class SoundProfileSettingsFragment extends PreferenceFragment {
     private EditTextPreference getSoundProfileNamePreference() {
         EditTextPreference name = new EditTextPreference(getActivity());
         name.setKey(SettingKeys.Wifi.RULE_NAME + "_" + id);
-        name.setTitle(R.string.rule_name_title);
-        name.setDefaultValue(getString(R.string.rule_name_default));
+        name.setTitle(R.string.sound_profile_name);
+        name.setDefaultValue(getString(R.string.new_sound_profile_name));
 
         PreferenceHelper.bindPreferenceSummaryToValue(name);
         if (name.getSummary().toString().isEmpty()) {
-            name.setSummary(getString(R.string.rule_name_default));
+            name.setSummary(getString(R.string.new_sound_profile_name));
         }
         return name;
     }

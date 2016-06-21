@@ -3,6 +3,7 @@ package at.ac.brgenns.android.mutePhoneInClass.prefs;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
@@ -21,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import at.ac.brgenns.android.mutePhoneInClass.MutePhoneService;
 import at.ac.brgenns.android.mutePhoneInClass.R;
 
 /**
@@ -102,11 +104,17 @@ public class WifiSettingsFragment extends PreferenceFragment {
         //TODO: Use a receiver...
         //TODO: on 6.0 check if we have to enable Locationservice
         List<ScanResult> wifisFoundList = wifi.getScanResults();
-        String[] ssidsFoundArray = new String[wifisFoundList.size()];
-//        ssidsFoundArray[0] = ssid.getValue();
-        for (int i = 0; i < wifisFoundList.size(); i++) {
-            ssidsFoundArray[i] = wifisFoundList.get(i).SSID;
-        }
+////        ssidsFoundArray[0] = ssid.getValue();
+//        for (int i = 0; i < wifisFoundList.size(); i++) {
+//            ssidsFoundArray[i] = wifisFoundList.get(i).SSID;
+//        }
+        Set<String> SSIDStringSet =
+                MutePhoneService.scanResultToUniqueSSIDStringSet(wifisFoundList);
+        List<WifiConfiguration> configuredNetworks = wifi.getConfiguredNetworks();
+        SSIDStringSet.addAll(MutePhoneService.configuredNetworksToUniqueSSIDStringSet(configuredNetworks));
+        String[] ssidsFoundArray = new String[SSIDStringSet.size()];
+//        ssidsFoundArray = new String[SSIDStringSet.size()];
+        SSIDStringSet.toArray(ssidsFoundArray);
         ssid.setEntries(ssidsFoundArray);
         ssid.setEntryValues(ssidsFoundArray);
         PreferenceHelper.bindPreferenceSummaryToValue(ssid);
@@ -139,6 +147,7 @@ public class WifiSettingsFragment extends PreferenceFragment {
         soundProfile.setEntries(Arrays.copyOfRange(entries, 0, i));
         soundProfile.setEntryValues(Arrays.copyOfRange(values, 0, i));
         soundProfile.setDefaultValue("0");
+
         PreferenceHelper.bindPreferenceSummaryToValue(soundProfile);
         return soundProfile;
     }

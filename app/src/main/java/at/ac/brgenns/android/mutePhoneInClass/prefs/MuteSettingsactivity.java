@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -86,8 +87,7 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
     }
 
     protected void runScanAndShowWifi() {
-        WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        wifi.startScan();
+        Toast.makeText(this,"Please stand by while we are scanning for available Wifi Networks",Toast.LENGTH_SHORT).show();
         IntentFilter i = new IntentFilter();
         i.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
 
@@ -118,6 +118,9 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
             }
         };
         registerReceiver(receiver, i);
+
+        WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        wifi.startScan();
     }
 
     @Override

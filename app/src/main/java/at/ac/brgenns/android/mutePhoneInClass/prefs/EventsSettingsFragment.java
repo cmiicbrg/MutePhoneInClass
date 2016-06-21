@@ -113,6 +113,7 @@ public class EventsSettingsFragment extends PreferenceFragment
         pAdd.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
+
                 ((MuteSettingsActivity) getActivity()).runScanAndShowWifi();
                 return true;
             }

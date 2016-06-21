@@ -42,4 +42,6 @@
     <string name="warning_sound_setting">The sound settings, that were active when a rule gets applied will be restored, either on disabling or when no rule applies!</string>
     <string name="disable_for">Disable for</string>
     <string name="ever">ever</string>
+    <string name="sound_profile_name">Sound profile name</string>
+    <string name="new_sound_profile_name">New sound profile</string>
 </resources>

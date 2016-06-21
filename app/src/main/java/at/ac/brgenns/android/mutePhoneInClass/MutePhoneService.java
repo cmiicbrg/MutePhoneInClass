@@ -12,6 +12,7 @@ import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -366,9 +367,19 @@ public class MutePhoneService extends Service {
     public static Set<String> scanResultToUniqueSSIDStringSet(List<ScanResult> scanResults) {
         Set<String> scanResultSet = new HashSet<>();
         for (ScanResult scanResult : scanResults) {
-            scanResultSet.add(scanResult.SSID);
+            if (!scanResult.SSID.isEmpty()) {
+                scanResultSet.add(scanResult.SSID);
+            }
         }
         return scanResultSet;
+    }
+
+    public static Set<String> configuredNetworksToUniqueSSIDStringSet(List<WifiConfiguration> configuredNetworks) {
+        Set<String> configuredNetworksSet = new HashSet<>();
+        for (WifiConfiguration config : configuredNetworks) {
+            configuredNetworksSet.add(config.SSID);
+        }
+        return configuredNetworksSet;
     }
 
     private void enableReceivers() {
