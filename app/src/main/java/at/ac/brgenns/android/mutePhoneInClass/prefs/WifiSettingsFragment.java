@@ -99,21 +99,13 @@ public class WifiSettingsFragment extends PreferenceFragment {
         ssid.setKey(SettingKeys.Wifi.SSID + "_" + id);
         ssid.setTitle(R.string.mute_on_wifi);
         WifiManager wifi = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
-//        wifi.startScan();
-        //TODO: when editing a setting we don't want to search for WIFIS or add the old WIFI to the list
-        //TODO: Use a receiver...
-        //TODO: on 6.0 check if we have to enable Locationservice
-        List<ScanResult> wifisFoundList = wifi.getScanResults();
-////        ssidsFoundArray[0] = ssid.getValue();
-//        for (int i = 0; i < wifisFoundList.size(); i++) {
-//            ssidsFoundArray[i] = wifisFoundList.get(i).SSID;
-//        }
-        Set<String> SSIDStringSet =
-                MutePhoneService.scanResultToUniqueSSIDStringSet(wifisFoundList);
-        List<WifiConfiguration> configuredNetworks = wifi.getConfiguredNetworks();
-        SSIDStringSet.addAll(MutePhoneService.configuredNetworksToUniqueSSIDStringSet(configuredNetworks));
+        Set<String> SSIDStringSet = new HashSet<>();
+        SSIDStringSet.add(PreferenceManager
+                .getDefaultSharedPreferences(ssid.getContext())
+                .getString(ssid.getKey(), ""));
+        SSIDStringSet.addAll(MutePhoneService.scanResultToUniqueSSIDStringSet(wifi.getScanResults()));
+        SSIDStringSet.addAll(MutePhoneService.configuredNetworksToUniqueSSIDStringSet(wifi.getConfiguredNetworks()));
         String[] ssidsFoundArray = new String[SSIDStringSet.size()];
-//        ssidsFoundArray = new String[SSIDStringSet.size()];
         SSIDStringSet.toArray(ssidsFoundArray);
         ssid.setEntries(ssidsFoundArray);
         ssid.setEntryValues(ssidsFoundArray);

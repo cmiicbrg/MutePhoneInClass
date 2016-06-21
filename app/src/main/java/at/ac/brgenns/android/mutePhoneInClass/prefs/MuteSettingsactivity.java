@@ -38,9 +38,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import at.ac.brgenns.android.mutePhoneInClass.SSIDChooser;
 import at.ac.brgenns.android.mutePhoneInClass.MutePhoneService;
 import at.ac.brgenns.android.mutePhoneInClass.R;
+import at.ac.brgenns.android.mutePhoneInClass.SSIDChooser;
 
 public class MuteSettingsActivity extends AppCompatPreferenceActivity
         implements SSIDChooser.SSIDChosenListener, GoogleApiClient.ConnectionCallbacks,
@@ -58,6 +58,9 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
 
     public GoogleApiClient mGoogleApiClient;
     private String[] ssidsFoundArray;
+    private List<ScanResult> wifisFoundList;
+    private WifiManager wifi;
+    private Set<String> SSIDStringSet;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +69,8 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
         setContentView(R.layout.activity_mute_settings);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !hasPermissionsToScanWifi()) {
             //TODO: 06-13 10:04:48.123 12499-12499/at.ac.brgenns.android.mutePhoneInClass W/Activity: Can reqeust only one set of permissions at a time
@@ -87,7 +92,8 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
     }
 
     protected void runScanAndShowWifi() {
-        Toast.makeText(this,"Please stand by while we are scanning for available Wifi Networks",Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.stand_by_while_scanning,
+                Toast.LENGTH_SHORT).show();
         IntentFilter i = new IntentFilter();
         i.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
 
@@ -96,17 +102,9 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
             @Override
             public void onReceive(Context context, Intent intent) {
                 unregisterReceiver(this);
-                WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-                List<ScanResult> wifisFoundList = wifi.getScanResults();
-//            WifiInfo info = wifi.getConnectionInfo();
+                wifisFoundList = wifi.getScanResults();
                 if (!wifisFoundList.isEmpty()) {
-                    Set<String> SSIDStringSet =
-                            MutePhoneService.scanResultToUniqueSSIDStringSet(wifisFoundList);
-                    ssidsFoundArray = new String[SSIDStringSet.size()];
-                    SSIDStringSet.toArray(ssidsFoundArray);
-                    SSIDChooser SSIDChooser = new SSIDChooser();
-                    SSIDChooser.setOptions(ssidsFoundArray);
-                    SSIDChooser.show(getFragmentManager(), "dosth");
+                    showSSIDChooserDialog(false);
                 } else {
                     // There seems to be a bug in 6.0 and up https://code.google.com/p/android/issues/detail?id=185370
                     // this runs counter to the intention of the App not to use Locationservice...
@@ -119,8 +117,20 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
         };
         registerReceiver(receiver, i);
 
-        WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         wifi.startScan();
+    }
+
+    private void showSSIDChooserDialog(boolean showConfiguredNetworks) {
+        SSIDStringSet = MutePhoneService.scanResultToUniqueSSIDStringSet(wifisFoundList);
+        if (showConfiguredNetworks) {
+            SSIDStringSet.addAll(MutePhoneService
+                    .configuredNetworksToUniqueSSIDStringSet(wifi.getConfiguredNetworks()));
+        }
+        ssidsFoundArray = new String[SSIDStringSet.size()];
+        SSIDStringSet.toArray(ssidsFoundArray);
+        SSIDChooser SSIDChooser = new SSIDChooser();
+        SSIDChooser.setOptions(ssidsFoundArray);
+        SSIDChooser.show(getFragmentManager(), "dosth");
     }
 
     @Override
@@ -169,25 +179,31 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
 
     @Override
     public void onSelectItem(int i) {
-        String uid = UUID.randomUUID().toString();
+        if (i < 0) {
+            showSSIDChooserDialog(true);
+        } else {
+            String uid = UUID.randomUUID().toString();
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(SettingKeys.Wifi.SSID + "_" + uid, ssidsFoundArray[i]);
-        editor.commit();
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(SettingKeys.Wifi.SSID + "_" + uid, ssidsFoundArray[i]);
+            editor.putString(SettingKeys.Wifi.RULE_NAME + "_" + uid, ssidsFoundArray[i]);
+            editor.putString(SettingKeys.Wifi.SOUND_PROFILE + "_" + uid, "0");
+            editor.commit();
 
-        PreferenceHelper.addID(this, uid);
+            PreferenceHelper.addID(this, uid);
 
-        // Refresh the view
-        Fragment f = getFragmentManager().findFragmentById(R.id.main_content);
-        if (f instanceof EventsSettingsFragment) {
-            ((EventsSettingsFragment) f).buildUI();
+            // Refresh the view
+            Fragment f = getFragmentManager().findFragmentById(R.id.main_content);
+            if (f instanceof EventsSettingsFragment) {
+                ((EventsSettingsFragment) f).buildUI();
+            }
+
+            // Start the Service -- Always set the WIFI_RULE_ADDED flag if WIFI-based rule is added.
+            Intent mutePhoneService = new Intent(this, MutePhoneService.class);
+            mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.WIFI_RULE_ADDED);
+            startService(mutePhoneService);
         }
-
-        // Start the Service -- Always set the WIFI_RULE_ADDED flag if WIFI-based rule is added.
-        Intent mutePhoneService = new Intent(this, MutePhoneService.class);
-        mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.WIFI_RULE_ADDED);
-        startService(mutePhoneService);
     }
 
     @TargetApi(Build.VERSION_CODES.M)

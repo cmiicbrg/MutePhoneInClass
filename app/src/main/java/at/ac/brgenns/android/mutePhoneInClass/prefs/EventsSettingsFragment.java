@@ -78,7 +78,8 @@ public class EventsSettingsFragment extends PreferenceFragment
             if (prefs.contains(SettingKeys.Wifi.SSID + "_" + id)) {
                 final Preference p = new Preference(getActivity());
                 p.setIcon(R.mipmap.ic_stat_name);
-                p.setTitle(prefs.getString(SettingKeys.Wifi.SSID + "_" + id, ""));
+                p.setTitle(prefs.getString(SettingKeys.Wifi.RULE_NAME + "_" + id,
+                        prefs.getString(SettingKeys.Wifi.SSID + "_" + id, "")));
                 String soundProfile_id = prefs.getString(
                         SettingKeys.Wifi.SOUND_PROFILE + "_" + id, "0");
                 String summary = "";

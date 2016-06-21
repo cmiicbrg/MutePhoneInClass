@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import at.ac.brgenns.android.mutePhoneInClass.prefs.SettingKeys;
 
@@ -87,11 +88,11 @@ public class MutePhoneService extends Service {
                     enableReceivers();
                     // Schedule Alarm
                     setAlarm(DEFAULT_ALARM_INTERVAL, ALARM);
-                    // Mute Phone since this has been triggered by choosing the SSID -> the user expects that the phone will now be muted
-                    // Since at the current state there are no additional settings we use the default: Alarms_only
-                    setSoundProfile("0");
-                    Toast.makeText(getApplicationContext(), "Phone muted", Toast.LENGTH_LONG)
-                            .show();
+                    //It's possible that the chosen WIfi is already nearby or connected
+                    if (!muteBasedOnConnectionInfo()) {
+                        Log.d(TAG, "Requesting Wifi Scan");
+                        wifiManager.startScan();
+                    }
                     break;
                 case ALARM:
                 case BOOT:
@@ -365,7 +366,7 @@ public class MutePhoneService extends Service {
     }
 
     public static Set<String> scanResultToUniqueSSIDStringSet(List<ScanResult> scanResults) {
-        Set<String> scanResultSet = new HashSet<>();
+        Set<String> scanResultSet = new TreeSet<>();
         for (ScanResult scanResult : scanResults) {
             if (!scanResult.SSID.isEmpty()) {
                 scanResultSet.add(scanResult.SSID);
@@ -375,9 +376,9 @@ public class MutePhoneService extends Service {
     }
 
     public static Set<String> configuredNetworksToUniqueSSIDStringSet(List<WifiConfiguration> configuredNetworks) {
-        Set<String> configuredNetworksSet = new HashSet<>();
+        Set<String> configuredNetworksSet = new TreeSet<>();
         for (WifiConfiguration config : configuredNetworks) {
-            configuredNetworksSet.add(config.SSID);
+            configuredNetworksSet.add(config.SSID.replace("\"",""));
         }
         return configuredNetworksSet;
     }

@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.preference.DialogPreference;
 
 /**
  * Created by User on 30.03.2016.
@@ -40,6 +41,13 @@ public class SSIDChooser extends DialogFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
+                    }
+                })
+                .setNeutralButton("More", new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogListener.onSelectItem(-1);
                     }
                 });
 
