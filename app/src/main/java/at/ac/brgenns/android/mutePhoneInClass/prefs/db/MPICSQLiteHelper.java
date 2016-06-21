@@ -114,14 +114,6 @@ public class MPICSQLiteHelper extends SQLiteOpenHelper {
         values.put(SOUND_PROFILE_RING_VOLUME, 0);
         values.put(SOUND_PROFILE_VIBRATE, 0);
         db.insert(SOUND_PROFILE, null, values);
-//        values = new ContentValues();
-//        values.put(WIFI_EVENT_ACTIVE, 1);
-//        values.put(WIFI_EVENT_SSID, "ChriMarg");
-//        values.put(WIFI_EVENT_DAYS, "");
-//        values.put(WIFI_EVENT_STARTTIME, "");
-//        values.put(WIFI_EVENT_ENDTIME, "");
-//        values.put(WIFI_EVENT_SOUND_PROFILE, 0);
-//        db.insert(WIFI_EVENT, null, values);
     }
 
     @Override
