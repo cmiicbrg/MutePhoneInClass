@@ -44,4 +44,5 @@
     <string name="ever">ever</string>
     <string name="sound_profile_name">Sound profile name</string>
     <string name="new_sound_profile_name">New sound profile</string>
+    <string name="stand_by_while_scanning">Please stand by while we are scanning for available Wifi Networks</string>
 </resources>
