@@ -45,4 +45,8 @@
     <string name="sound_profile_name">Sound profile name</string>
     <string name="new_sound_profile_name">New sound profile</string>
     <string name="stand_by_while_scanning">Please stand by while we are scanning for available Wifi Networks</string>
+
+    <string name="webuntis_based_rule">Webuntis based rule</string>
+    <string name="wifi_based_rule">Wifi base rule</string>
+
 </resources>
