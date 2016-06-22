@@ -44,4 +44,12 @@ public class Event {
 	{
 		return this.startTime.isEarlier(comparison.startTime);
 	}
+
+	public DateTime getStartTime() {
+		return startTime;
+	}
+
+	public Duration getDuration() {
+		return duration;
+	}
 }

@@ -1,5 +1,7 @@
 package at.ac.brgenns.android.mutePhoneInClass;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -14,20 +16,25 @@ import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.text.DateFormat;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
 import at.ac.brgenns.android.mutePhoneInClass.prefs.SettingKeys;
+import at.dAuzinger.kusssApi.DateTime;
+import at.dAuzinger.kusssApi.Duration;
+import at.dAuzinger.kusssApi.Event;
+import at.dAuzinger.kusssApi.KUSSS;
+import at.dAuzinger.kusssApi.Semester;
+import at.dAuzinger.kusssApi.TimeTable;
 
 /**
  * Created by android on 07.04.2016.
@@ -35,7 +42,6 @@ import at.ac.brgenns.android.mutePhoneInClass.prefs.SettingKeys;
 public class MutePhoneService extends Service {
     private static final String TAG = MutePhoneService.class.getSimpleName();
     private final int DEFAULT_ALARM_INTERVAL = 3; //in Minutes
-
     public static final String TASK = "Task";
 
     public static final int WIFI_RULE_ADDED = 0;
@@ -45,6 +51,7 @@ public class MutePhoneService extends Service {
     public static final int WIFI_STATE_CHANGE = 4;
     public static final int DISABLE = 5;
     public static final int ENABLE = 6;
+    public static final int KUSS_ACCOUNT = 7;
 
     private AudioManager audioManager;
     private AlarmManager alarmManager;
@@ -79,7 +86,7 @@ public class MutePhoneService extends Service {
         }
         Log.d(TAG, "task was: " + task);
 
-        if (hasWifiRules() && prefs.getBoolean(SettingKeys.MUTE_ENABLED, true) ||
+        if (hasRules() && prefs.getBoolean(SettingKeys.MUTE_ENABLED, true) ||
                 task == ENABLE) {
 
             switch (task) {
@@ -145,6 +152,53 @@ public class MutePhoneService extends Service {
                     }
                     setAlarm(3, ALARM);
                     break;
+                case KUSS_ACCOUNT:
+                    String userName = "";
+                    for (String id : prefIDs) {
+                        if (prefs.contains(SettingKeys.Kusss.USER + "_" + id)) {
+                            userName =
+                                    prefs.getString(SettingKeys.Kusss.USER + "_" + id, "");
+                            if (!userName.isEmpty()) {
+                                //TODO: this is just for testing connectivity -> should use another Service with it's own AlarmManager
+                                //This will not work because of an StringIndexOutOfBoundsException in KUSSS API
+                                final String finalUserName = userName;
+                                AsyncTask retrieveKusssSchedule =
+                                        new AsyncTask<String, Void, Void>() {
+                                            @Override
+                                            protected Void doInBackground(String... params) {
+                                                Account account = new Account(finalUserName,
+                                                        AccountAuthenticatorService.AUTH_TYPE);
+                                                AccountManager accountManager =
+                                                        AccountManager.get(MutePhoneService.this);
+                                                String password =
+                                                        accountManager.getPassword(account);
+
+                                                Log.d(TAG,
+                                                        "password retrieved" + password.length());
+                                                KUSSS kusss = new KUSSS(finalUserName, password);
+
+                                                TimeTable timeTable =
+                                                        null;
+                                                try {
+                                                    timeTable =
+                                                            kusss.getTimeTable(
+                                                                    new Semester("2016S"));
+
+                                                    Event event = timeTable.getNext(true);
+                                                    DateTime startTime = event.getStartTime();
+                                                    Duration duration = event.getDuration();
+                                                    Toast.makeText(MutePhoneService.this,"Next LVA retrieved. Start time is: " + startTime.toString(),Toast.LENGTH_LONG).show();
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
+                                                }
+                                                return null;
+                                            }
+                                        };
+                                retrieveKusssSchedule.execute(new String[0]);
+
+                            }
+                        }
+                    }
                 default:
                     setAlarm(3, ENABLE);
             }
@@ -162,9 +216,10 @@ public class MutePhoneService extends Service {
         return START_STICKY;
     }
 
-    private boolean hasWifiRules() {
+    private boolean hasRules() {
         for (String id : prefIDs) {
-            if (prefs.contains(SettingKeys.Wifi.SSID + "_" + id)) {
+            if (prefs.contains(SettingKeys.Wifi.SSID + "_" + id) ||
+                    prefs.contains(SettingKeys.Kusss.USER + "_" + id)) {
                 return true;
             }
         }
@@ -211,10 +266,12 @@ public class MutePhoneService extends Service {
                 if (prefs.contains(SettingKeys.Wifi.SSID + id) &&
                         prefs.getBoolean(SettingKeys.Wifi.ENABLE + "_" + id, true) &&
                         !mute) {
-                    if (prefs.getString(SettingKeys.Wifi.SSID + "_" + id, "").equals(currentSSID)) {
+                    if (prefs.getString(SettingKeys.Wifi.SSID + "_" + id, "")
+                            .equals(currentSSID)) {
                         reason = currentSSID;
                         setSoundProfile(
-                                prefs.getString(SettingKeys.Wifi.SOUND_PROFILE + "_" + id, "0"));
+                                prefs.getString(SettingKeys.Wifi.SOUND_PROFILE + "_" + id,
+                                        "0"));
                         mute = true;
                     }
                 }
@@ -258,10 +315,14 @@ public class MutePhoneService extends Service {
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
             audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
         } else { // load SoundProfile from Preferences
-            int mediaVolume = prefs.getInt(SettingKeys.SoundProfile.MEDIA_VOLUME + "_" + id, -1);
-            int alarmVolume = prefs.getInt(SettingKeys.SoundProfile.ALARM_VOLUME + "_" + id, -1);
-            int ringVolume = prefs.getInt(SettingKeys.SoundProfile.RINGER_VOLUME + "_" + id, -1);
-            boolean vibrate = prefs.getBoolean(SettingKeys.SoundProfile.VIBRATE + "_" + id, false);
+            int mediaVolume =
+                    prefs.getInt(SettingKeys.SoundProfile.MEDIA_VOLUME + "_" + id, -1);
+            int alarmVolume =
+                    prefs.getInt(SettingKeys.SoundProfile.ALARM_VOLUME + "_" + id, -1);
+            int ringVolume =
+                    prefs.getInt(SettingKeys.SoundProfile.RINGER_VOLUME + "_" + id, -1);
+            boolean vibrate =
+                    prefs.getBoolean(SettingKeys.SoundProfile.VIBRATE + "_" + id, false);
             int ringerMode = AudioManager.RINGER_MODE_NORMAL;
             if (vibrate && ringVolume >= 0) {
                 ringerMode = AudioManager.RINGER_MODE_VIBRATE;
@@ -289,7 +350,8 @@ public class MutePhoneService extends Service {
         }
     }
 
-    private boolean shouldAdjustAudioSettings(int alarmVolume, int mediaVolume, int ringerVolume,
+    private boolean shouldAdjustAudioSettings(int alarmVolume, int mediaVolume,
+                                              int ringerVolume,
                                               int ringerMode) {
         boolean settingsOK = true;
         settingsOK &= audioManager.getRingerMode() == ringerMode;
@@ -342,7 +404,8 @@ public class MutePhoneService extends Service {
                 PendingIntent.getBroadcast(getApplicationContext(), 0, nextScan,
                         PendingIntent.FLAG_UPDATE_CURRENT);
         alarmManager
-                .set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + inMinutes * 60 * 1000,
+                .set(AlarmManager.RTC_WAKEUP,
+                        System.currentTimeMillis() + inMinutes * 60 * 1000,
                         pendingNextScan);
     }
 
@@ -375,10 +438,11 @@ public class MutePhoneService extends Service {
         return scanResultSet;
     }
 
-    public static Set<String> configuredNetworksToUniqueSSIDStringSet(List<WifiConfiguration> configuredNetworks) {
+    public static Set<String> configuredNetworksToUniqueSSIDStringSet(
+            List<WifiConfiguration> configuredNetworks) {
         Set<String> configuredNetworksSet = new TreeSet<>();
         for (WifiConfiguration config : configuredNetworks) {
-            configuredNetworksSet.add(config.SSID.replace("\"",""));
+            configuredNetworksSet.add(config.SSID.replace("\"", ""));
         }
         return configuredNetworksSet;
     }

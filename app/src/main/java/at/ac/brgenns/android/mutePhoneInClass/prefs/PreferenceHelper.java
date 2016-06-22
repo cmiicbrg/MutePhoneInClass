@@ -7,17 +7,15 @@ import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
-
-import at.ac.brgenns.android.mutePhoneInClass.R;
 
 /**
  * Created by Christoph on 12.06.2016.
  */
 public class PreferenceHelper {
+
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.

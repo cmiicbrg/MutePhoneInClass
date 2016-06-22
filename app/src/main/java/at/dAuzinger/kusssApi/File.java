@@ -14,7 +14,7 @@ public class File {
 	/**
 	 * Default constructor
 	 * @param url_ The location of the file
-	 * @param title_ A name assigned to the file (not the actual filename, but a more representing one, e.g. "Übung 1")
+	 * @param title_ A name assigned to the file (not the actual filename, but a more representing one, e.g. "Ãœbung 1")
 	 * @param handler_ A KUSSSHandler, needed to access the KUSSS
 	 * @throws Exception Passed through errors
 	 */

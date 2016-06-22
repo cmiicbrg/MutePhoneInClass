@@ -3,12 +3,14 @@
           package="at.ac.brgenns.android.mutePhoneInClass">
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <!-- <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/> -->
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <uses-feature android:name="android.hardware.wifi"/>
 
@@ -23,6 +25,17 @@
             android:exported="false"/>
         <!--android:process=":MutePhoneService"/>-->
 
+        <service
+            android:name="AccountAuthenticatorService"
+            android:exported="true"
+            android:process=":auth">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator"/>
+        </service>
 
         <activity
             android:name=".prefs.MuteSettingsActivity"
@@ -49,7 +62,13 @@
 
         <activity
             android:name=".prefs.SoundProfileManageActivity"
-            android:label="@string/sound_profile_edit"
+            android:label="@string/sound_profile_manage"
+            android:parentActivityName=".prefs.MuteSettingsActivity">
+        </activity>
+
+        <activity
+            android:name=".prefs.KusssSettingsActivity"
+            android:label="@string/kusss_setting_edit"
             android:parentActivityName=".prefs.MuteSettingsActivity">
         </activity>
 

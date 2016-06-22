@@ -48,5 +48,12 @@
 
     <string name="webuntis_based_rule">Webuntis based rule</string>
     <string name="wifi_based_rule">Wifi base rule</string>
+    <string name="kusss_based_rule">Kusss schedule based rule</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="KUSSS">Kusss</string>
+    <string name="kusss">Kusss</string>
+    <string name="kusss_setting_edit">Edit Kusss based rule</string>
+    <string name="user_pass">Username and Password</string>
 
 </resources>

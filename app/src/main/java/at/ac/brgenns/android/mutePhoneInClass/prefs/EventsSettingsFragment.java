@@ -16,6 +16,7 @@ import java.util.Set;
 
 import at.ac.brgenns.android.mutePhoneInClass.MutePhoneService;
 import at.ac.brgenns.android.mutePhoneInClass.R;
+import at.ac.brgenns.android.mutePhoneInClass.RuleTypeChooser;
 
 /**
  * Created by Christoph on 27.05.2016.
@@ -104,6 +105,22 @@ public class EventsSettingsFragment extends PreferenceFragment
                     }
                 });
                 rules.addPreference(p);
+            } else if (prefs.contains(SettingKeys.Kusss.USER + "_" + id)) {
+                final Preference p = new Preference(getActivity());
+                p.setIcon(R.drawable.ic_account_black_24dp);
+                p.setTitle(R.string.kusss);
+                p.setSummary(prefs.getString(SettingKeys.Kusss.USER + "_" + id, ""));
+                p.setPersistent(false);
+                p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Intent intent = new Intent(getActivity(), KusssSettingsActivity.class);
+                        intent.putExtra(MuteSettingsActivity.SETTING_ID, id);
+                        startActivity(intent);
+                        return true;
+                    }
+                });
+                rules.addPreference(p);
             }
         }
 
@@ -114,8 +131,9 @@ public class EventsSettingsFragment extends PreferenceFragment
         pAdd.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-
-                ((MuteSettingsActivity) getActivity()).runScanAndShowWifi();
+                RuleTypeChooser chooseRuleType = new RuleTypeChooser();
+                chooseRuleType.show(getFragmentManager(), "wekd");
+//                ((MuteSettingsActivity) getActivity()).runScanAndShowWifi();
                 return true;
             }
         });

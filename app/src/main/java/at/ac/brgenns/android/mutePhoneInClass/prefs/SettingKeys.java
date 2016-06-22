@@ -13,12 +13,13 @@ public class SettingKeys {
     public static final String LAST_RINGER_VOLUME = "last_ringer_volume";
     public static final String LAST_RINGER_MODE = "last_vibrate_state";
     public static final String DISABLED_FOR = "disabled_for";
+    public static final String KUSS_USER = "kuss_user";
 
     public enum Wifi {
         ENABLE,
         RULE_NAME,
         SSID,
-        SOUND_PROFILE;
+        SOUND_PROFILE
     }
 
     public enum SoundProfile {
@@ -27,5 +28,11 @@ public class SettingKeys {
         MEDIA_VOLUME,
         RINGER_VOLUME,
         VIBRATE
+    }
+
+    public enum Kusss {
+        ENABLE,
+        RULE_NAME,
+        USER
     }
 }

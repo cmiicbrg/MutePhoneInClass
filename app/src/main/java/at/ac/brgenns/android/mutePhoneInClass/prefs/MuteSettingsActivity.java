@@ -44,7 +44,8 @@ import at.ac.brgenns.android.mutePhoneInClass.RuleTypeChooser;
 import at.ac.brgenns.android.mutePhoneInClass.SSIDChooser;
 
 public class MuteSettingsActivity extends AppCompatPreferenceActivity
-        implements SSIDChooser.SSIDChosenListener, RuleTypeChooser.RuleTypeChosenListener, GoogleApiClient.ConnectionCallbacks,
+        implements SSIDChooser.SSIDChosenListener, RuleTypeChooser.RuleTypeChosenListener,
+        GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = MuteSettingsActivity.class.getSimpleName();
@@ -78,8 +79,8 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
             requestPermissions(PERMISSIONS,
                     REQUIRED_PERMISSIONS_REQUEST_CODE);
         } else if (getIDs().isEmpty() && isMutingEnabled()) {
-            RuleTypeChooser choosRuleType = new RuleTypeChooser();
-            choosRuleType.show(getFragmentManager(),"wekd");
+            RuleTypeChooser chooseRuleType = new RuleTypeChooser();
+            chooseRuleType.show(getFragmentManager(), "wekd");
         }
     }
 
@@ -307,8 +308,10 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
     public void onSelectRuleType(int i) {
         if (i == 0) {
             runScanAndShowWifi();
-        } else if (i==1) {
-            //TODO
+        } else if (i == 1) {
+            Intent intent = new Intent(this, KusssSettingsActivity.class);
+            intent.putExtra(MuteSettingsActivity.SETTING_ID, UUID.randomUUID().toString());
+            startActivity(intent);
         }
     }
 }
