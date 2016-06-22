@@ -61,6 +61,8 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
     private List<ScanResult> wifisFoundList;
     private WifiManager wifi;
     private Set<String> SSIDStringSet;
+    private BroadcastReceiver wifiFoundReceiver;
+    private boolean isScanning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,32 +94,34 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
     }
 
     protected void runScanAndShowWifi() {
-        Toast.makeText(this, R.string.stand_by_while_scanning,
-                Toast.LENGTH_SHORT).show();
-        IntentFilter i = new IntentFilter();
-        i.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        if (!isScanning) {
+            Toast.makeText(this, R.string.stand_by_while_scanning,
+                    Toast.LENGTH_SHORT).show();
+            IntentFilter i = new IntentFilter();
+            i.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
 
-        BroadcastReceiver receiver = new BroadcastReceiver() {
-
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                unregisterReceiver(this);
-                wifisFoundList = wifi.getScanResults();
-                if (!wifisFoundList.isEmpty()) {
-                    showSSIDChooserDialog(false);
-                } else {
-                    // There seems to be a bug in 6.0 and up https://code.google.com/p/android/issues/detail?id=185370
-                    // this runs counter to the intention of the App not to use Locationservice...
-                    // but we have to mitigate the Problem:
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        checkLocationServiceEnabled();
+            wifiFoundReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    unregisterReceiver(this);
+                    isScanning = false;
+                    wifisFoundList = wifi.getScanResults();
+                    if (!wifisFoundList.isEmpty()) {
+                        showSSIDChooserDialog(false);
+                    } else {
+                        // There seems to be a bug in 6.0 and up https://code.google.com/p/android/issues/detail?id=185370
+                        // this runs counter to the intention of the App not to use Locationservice...
+                        // but we have to mitigate the Problem:
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            checkLocationServiceEnabled();
+                        }
                     }
                 }
-            }
-        };
-        registerReceiver(receiver, i);
-
-        wifi.startScan();
+            };
+            registerReceiver(wifiFoundReceiver, i);
+            isScanning = true;
+            wifi.startScan();
+        }
     }
 
     private void showSSIDChooserDialog(boolean showConfiguredNetworks) {
@@ -148,6 +152,7 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
                 }
             }
             // TODO: else { show explanation; }
+
         }
     }
 
@@ -174,11 +179,18 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
 
     @Override
     public void onPause() {
+        try {
+            // Exception when this Activity isn't running anymore when WifiBroadcast is received
+            unregisterReceiver(wifiFoundReceiver);
+        } catch (IllegalArgumentException e) {
+            // everything ok the Receiver wasn't registered anymore
+        }
         super.onPause();
     }
 
     @Override
     public void onSelectItem(int i) {
+
         if (i < 0) {
             showSSIDChooserDialog(true);
         } else {

@@ -251,12 +251,14 @@ public class MutePhoneService extends Service {
             saveLastAudioSettings();
             audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
+            SilencerNotification.notify(this, reason, 1);
         } else if (id.equals("1") &&
                 shouldAdjustAudioSettings(0, 0, 0, AudioManager.RINGER_MODE_SILENT)) {
             saveLastAudioSettings();
             audioManager.setStreamVolume(AudioManager.STREAM_ALARM, 0, 0);
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
             audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+            SilencerNotification.notify(this, reason, 1);
         } else { // load SoundProfile from Preferences
             int mediaVolume = prefs.getInt(SettingKeys.SoundProfile.MEDIA_VOLUME + "_" + id, -1);
             int alarmVolume = prefs.getInt(SettingKeys.SoundProfile.ALARM_VOLUME + "_" + id, -1);
@@ -285,6 +287,7 @@ public class MutePhoneService extends Service {
                 if (mediaVolume >= 0) {
                     audioManager.setStreamVolume(AudioManager.STREAM_ALARM, mediaVolume, 0);
                 }
+                SilencerNotification.notify(this, reason, 1);
             }
         }
     }
@@ -309,7 +312,6 @@ public class MutePhoneService extends Service {
     private void saveLastAudioSettings() {
 
         if (!prefs.contains(SettingKeys.LAST_RINGER_MODE)) {
-            SilencerNotification.notify(this, reason, 1);
             SharedPreferences.Editor editor = prefs.edit();
             editor.putInt(SettingKeys.LAST_ALARM_VOLUME,
                     audioManager.getStreamVolume(AudioManager.STREAM_ALARM))
