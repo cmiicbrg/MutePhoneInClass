@@ -334,7 +334,9 @@ public class MutePhoneService extends Service {
     }
 
     private void cancelAlarm() {
-        alarmManager.cancel(pendingNextScan);
+        if (pendingNextScan != null) {
+            alarmManager.cancel(pendingNextScan);
+        }
     }
 
     private void setAlarm(int inMinutes, int intentExtra) {
