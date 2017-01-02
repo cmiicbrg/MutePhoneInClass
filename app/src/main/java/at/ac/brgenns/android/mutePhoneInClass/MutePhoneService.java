@@ -1,7 +1,5 @@
 package at.ac.brgenns.android.mutePhoneInClass;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -16,12 +14,10 @@ import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
-import android.os.AsyncTask;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.util.HashSet;
 import java.util.List;
@@ -29,12 +25,10 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import at.ac.brgenns.android.mutePhoneInClass.prefs.SettingKeys;
-import at.dAuzinger.kusssApi.DateTime;
-import at.dAuzinger.kusssApi.Duration;
-import at.dAuzinger.kusssApi.Event;
-import at.dAuzinger.kusssApi.KUSSS;
-import at.dAuzinger.kusssApi.Semester;
-import at.dAuzinger.kusssApi.TimeTable;
+
+//import java.util.Date;
+
+//import at.dAuzinger.kusssApi.DateTime;
 
 /**
  * Created by android on 07.04.2016.
@@ -153,52 +147,7 @@ public class MutePhoneService extends Service {
                     setAlarm(3, ALARM);
                     break;
                 case KUSS_ACCOUNT:
-                    String userName = "";
-                    for (String id : prefIDs) {
-                        if (prefs.contains(SettingKeys.Kusss.USER + "_" + id)) {
-                            userName =
-                                    prefs.getString(SettingKeys.Kusss.USER + "_" + id, "");
-                            if (!userName.isEmpty()) {
-                                //TODO: this is just for testing connectivity -> should use another Service with it's own AlarmManager
-                                //This will not work because of an StringIndexOutOfBoundsException in KUSSS API
-                                final String finalUserName = userName;
-                                AsyncTask retrieveKusssSchedule =
-                                        new AsyncTask<String, Void, Void>() {
-                                            @Override
-                                            protected Void doInBackground(String... params) {
-                                                Account account = new Account(finalUserName,
-                                                        AccountAuthenticatorService.AUTH_TYPE);
-                                                AccountManager accountManager =
-                                                        AccountManager.get(MutePhoneService.this);
-                                                String password =
-                                                        accountManager.getPassword(account);
-
-                                                Log.d(TAG,
-                                                        "password retrieved" + password.length());
-                                                KUSSS kusss = new KUSSS(finalUserName, password);
-
-                                                TimeTable timeTable =
-                                                        null;
-                                                try {
-                                                    timeTable =
-                                                            kusss.getTimeTable(
-                                                                    new Semester("2016S"));
-
-                                                    Event event = timeTable.getNext(true);
-                                                    DateTime startTime = event.getStartTime();
-                                                    Duration duration = event.getDuration();
-                                                    Toast.makeText(MutePhoneService.this,"Next LVA retrieved. Start time is: " + startTime.toString(),Toast.LENGTH_LONG).show();
-                                                } catch (Exception e) {
-                                                    e.printStackTrace();
-                                                }
-                                                return null;
-                                            }
-                                        };
-                                retrieveKusssSchedule.execute(new String[0]);
-
-                            }
-                        }
-                    }
+                    (new KusssScheduleSync(this)).execute(new String[0]);
                 default:
                     setAlarm(3, ENABLE);
             }

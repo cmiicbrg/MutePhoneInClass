@@ -67,7 +67,7 @@ public class LVA
 	 */
 	public String getName() throws Exception
 	{
-		if(initialized || preParametrized)
+		if(name != null || initialized || preParametrized)
 		{
 			return name;
 		}

@@ -34,7 +34,7 @@ public class KusssSettingsFragment extends PreferenceFragment {
         setHasOptionsMenu(true);
 
         root.addPreference(getEnablePreference());
-        root.addPreference(getKusssNamePreference());
+//        root.addPreference(getKusssNamePreference());
         root.addPreference(getUsernamePasswordPreference());
 
         PreferenceHelper.addID(getActivity(), id);
@@ -73,14 +73,14 @@ public class KusssSettingsFragment extends PreferenceFragment {
         return enable;
     }
 
-    @NonNull
-    private EditTextPreference getKusssNamePreference() {
-        EditTextPreference name = new EditTextPreference(getActivity());
-        name.setKey(SettingKeys.Kusss.RULE_NAME + "_" + id);
-        name.setTitle(R.string.kusss);
-//        name.setPersistent(false);
-        return name;
-    }
+//    @NonNull
+//    private EditTextPreference getKusssNamePreference() {
+//        EditTextPreference name = new EditTextPreference(getActivity());
+//        name.setKey(SettingKeys.Kusss.RULE_NAME + "_" + id);
+//        name.setTitle(R.string.kusss);
+////        name.setPersistent(false);
+//        return name;
+//    }
 
     private Preference getUsernamePasswordPreference() {
         UsernamePasswordPreference usernamePassword =
