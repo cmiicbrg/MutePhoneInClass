@@ -72,6 +72,18 @@
             android:parentActivityName=".prefs.MuteSettingsActivity">
         </activity>
 
+        <activity
+            android:name=".prefs.ICSSettingsActivity"
+            android:label="@string/ics_rule_edit"
+            android:parentActivityName=".prefs.MuteSettingsActivity">
+        </activity>
+
+        <activity
+            android:name=".prefs.WebUntisSettingsActivity"
+            android:label="@string/webuntis_rule_edit"
+            android:parentActivityName=".prefs.MuteSettingsActivity">
+        </activity>
+
         <receiver
             android:name=".WifiBroadcastReceiver"
             android:enabled="false">

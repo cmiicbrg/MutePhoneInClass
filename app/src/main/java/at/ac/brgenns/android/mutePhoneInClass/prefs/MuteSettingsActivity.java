@@ -291,7 +291,6 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
                 switch (resultCode) {
                     case Activity.RESULT_OK:
                         runScanAndShowWifi();
-
                         break;
                     case Activity.RESULT_CANCELED:
                         // The user was asked to change settings, but chose not to
@@ -310,6 +309,14 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
             runScanAndShowWifi();
         } else if (i == 1) {
             Intent intent = new Intent(this, KusssSettingsActivity.class);
+            intent.putExtra(MuteSettingsActivity.SETTING_ID, UUID.randomUUID().toString());
+            startActivity(intent);
+        } else if (i == 2) {
+            Intent intent = new Intent(this, ICSSettingsActivity.class);
+            intent.putExtra(MuteSettingsActivity.SETTING_ID, UUID.randomUUID().toString());
+            startActivity(intent);
+        } else if (i == 3) {
+            Intent intent = new Intent(this, WebUntisSettingsActivity.class);
             intent.putExtra(MuteSettingsActivity.SETTING_ID, UUID.randomUUID().toString());
             startActivity(intent);
         }

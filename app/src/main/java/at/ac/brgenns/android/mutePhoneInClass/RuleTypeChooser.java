@@ -20,7 +20,7 @@ public class RuleTypeChooser extends DialogFragment {
         try {
             dialogListener = (RuleTypeChosenListener) activity;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString() + "must implement SSIDChosenListener");
+            throw new ClassCastException(activity.toString() + "must implement RuleTypeChosenListener");
         }
     }
 

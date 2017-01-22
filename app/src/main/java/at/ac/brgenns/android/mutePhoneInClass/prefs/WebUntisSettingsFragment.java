@@ -17,22 +17,22 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
  * Created by Christoph on 27.05.2016.
  */
 @TargetApi(Build.VERSION_CODES.M)
-public class KusssSettingsFragment extends SettingsFragment {
-    private static final String TAG = KusssSettingsFragment.class.getSimpleName();
+public class WebUntisSettingsFragment extends SettingsFragment {
+    private static final String TAG = WebUntisSettingsFragment.class.getSimpleName();
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.kusss_event_settings);
+        addPreferencesFromResource(R.xml.webuntis_event_settings);
         final PreferenceScreen root = getPreferenceScreen();
 
-        id = ((KusssSettingsActivity) getActivity()).getSettingID();
+        id = ((WebUntisSettingsActivity) getActivity()).getSettingID();
 
         setHasOptionsMenu(true);
 
-        root.addPreference(getEnablePreference(SettingKeys.Kusss.ENABLE));
-        root.addPreference(getUsernamePasswordPreference());
+        root.addPreference(getEnablePreference(SettingKeys.WebUntis.ENABLE));
+//        root.addPreference(getUsernamePasswordPreference());
         root.addPreference(getEnableWifiPreference(getString(R.string.mute_only_on_wifi),
                 SettingKeys.Wifi.SSID));
         root.addPreference(getSSIDChooserPreference());
@@ -48,9 +48,9 @@ public class KusssSettingsFragment extends SettingsFragment {
     private Preference getUsernamePasswordPreference() {
         UsernamePasswordPreference usernamePassword =
                 new UsernamePasswordPreference(getActivity(), null);
-        usernamePassword.setKey(SettingKeys.Kusss.USER + "_" + id);
+        usernamePassword.setKey(SettingKeys.WebUntis.WEBUNTIS_USER + "_" + id);
         usernamePassword.setTitle(R.string.user_pass);
-        usernamePassword.setDialogTitle(R.string.KUSSS);
+        usernamePassword.setDialogTitle(R.string.WebUntis);
         PreferenceHelper.bindPreferenceSummaryToValue(usernamePassword);
 
         return usernamePassword;

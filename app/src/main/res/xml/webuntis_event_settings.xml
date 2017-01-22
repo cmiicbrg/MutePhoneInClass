@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:key="wifi_event_settings"
+                  android:title="@string/webuntis_rule_edit"
+    >
+    <!-- Preferences added at runtime -->
+</PreferenceScreen>

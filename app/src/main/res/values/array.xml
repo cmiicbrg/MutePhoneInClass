@@ -11,5 +11,8 @@
     <string-array name="rule_types">
         <item>@string/wifi_based_rule</item>
         <item>@string/kusss_based_rule</item>
+        <item>@string/ics_based_rule</item>
+        <item>@string/webuntis_based_rule</item>
     </string-array>
+    <string name="ics_based_rule">iCalendar based rule</string>
 </resources>

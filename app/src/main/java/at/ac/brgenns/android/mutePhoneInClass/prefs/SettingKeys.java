@@ -34,4 +34,15 @@ public class SettingKeys {
         ENABLE,
         USER
     }
+    public enum ICS {
+        ENABLE,
+        ICS_URL
+    }
+    public enum WebUntis {
+        ENABLE,
+        SERVER_URL,
+        SCHOOL_NAME,
+        CLASS_NAME,
+        WEBUNTIS_USER
+    }
 }

@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
@@ -17,22 +18,26 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
  * Created by Christoph on 27.05.2016.
  */
 @TargetApi(Build.VERSION_CODES.M)
-public class KusssSettingsFragment extends SettingsFragment {
-    private static final String TAG = KusssSettingsFragment.class.getSimpleName();
+public class ICSSettingsFragment extends SettingsFragment {
+    private static final String TAG = ICSSettingsFragment.class.getSimpleName();
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        addPreferencesFromResource(R.xml.kusss_event_settings);
+        addPreferencesFromResource(R.xml.ics_event_settings);
         final PreferenceScreen root = getPreferenceScreen();
 
-        id = ((KusssSettingsActivity) getActivity()).getSettingID();
+        id = ((ICSSettingsActivity) getActivity()).getSettingID();
+
+        root.addPreference(getEnablePreference(SettingKeys.ICS.ENABLE));
 
         setHasOptionsMenu(true);
+        EditTextPreference p  = new EditTextPreference(getActivity());
+        p.setTitle(getString(R.string.iCalendar_address));
+        p.setKey(SettingKeys.ICS.ICS_URL + "_" + id);
+        root.addPreference(p);
 
-        root.addPreference(getEnablePreference(SettingKeys.Kusss.ENABLE));
-        root.addPreference(getUsernamePasswordPreference());
         root.addPreference(getEnableWifiPreference(getString(R.string.mute_only_on_wifi),
                 SettingKeys.Wifi.SSID));
         root.addPreference(getSSIDChooserPreference());
@@ -43,17 +48,6 @@ public class KusssSettingsFragment extends SettingsFragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         return super.onOptionsItemSelected(item, SettingKeys.Kusss.class);
-    }
-
-    private Preference getUsernamePasswordPreference() {
-        UsernamePasswordPreference usernamePassword =
-                new UsernamePasswordPreference(getActivity(), null);
-        usernamePassword.setKey(SettingKeys.Kusss.USER + "_" + id);
-        usernamePassword.setTitle(R.string.user_pass);
-        usernamePassword.setDialogTitle(R.string.KUSSS);
-        PreferenceHelper.bindPreferenceSummaryToValue(usernamePassword);
-
-        return usernamePassword;
     }
 
     private SwitchPreference getEnableWifiPreference(String title,

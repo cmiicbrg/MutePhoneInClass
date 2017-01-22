@@ -22,7 +22,6 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
 public class UsernamePasswordPreference extends DialogPreference {
 
     private String userName;
-    //    private String password;
     private EditText usernameInput;
     private EditText passwordInput;
 
@@ -32,7 +31,6 @@ public class UsernamePasswordPreference extends DialogPreference {
         setDialogLayoutResource(R.layout.password_dialog);
         setPositiveButtonText(android.R.string.ok);
         setNegativeButtonText(android.R.string.cancel);
-
     }
 
     @Override
@@ -85,6 +83,5 @@ public class UsernamePasswordPreference extends DialogPreference {
         } else {
             this.userName = (String) defaultValue;
         }
-
     }
 }

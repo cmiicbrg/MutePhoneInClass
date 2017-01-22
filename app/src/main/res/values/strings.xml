@@ -4,7 +4,6 @@
     <string name="wifi_select">Please select your wifi</string>
     <string name="cWifi">Current Wifi:</string>
     <string name="cnWifi">Click to choose new wifi</string>
-    <!--<string name="title_activity_mpicprefs">Mute phone in class prefs</string>-->
     <string name="default_sound_profile">Default</string>
     <string name="wifi_event_settings">Mute if Wifi is available</string>
     <string name="choose_wifi">Choose Wifi</string>
@@ -14,6 +13,8 @@
     <string name="rule_name_default">Default</string>
     <string name="rule_name_title">Rule name</string>
     <string name="wifi_rule_edit">Editing Wifi based rule</string>
+    <string name="ics_rule_edit">Editing iCalendar based rule</string>
+    <string name="webuntis_rule_edit">Editing WebUntis based rule</string>
 
     <string name="total_silence">Total silence</string>
     <string name="sound_profile_title">Sound profile</string>
@@ -31,8 +32,6 @@
     <string name="sound_profile_manage">Manage sound profiles</string>
     <string name="add_sound_profile">Add sound profile</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="media_volume">Media volume</string>
     <string name="alarm_volume">Alarm volume</string>
     <string name="ringtone_volume">Ringtone volume</string>
@@ -57,5 +56,8 @@
     <string name="user_pass">Username and Password</string>
     <string name="mute_only_on_wifi">Mute only if selected Wifi has been found</string>
     <string name="ignore_wifi">Ignore WIFI</string>
+    <string name="WebUntis">WebUntis</string>
+    <string name="iCalendar_address">iCalendar address</string>
+    <string name="ics">iCal</string>
 
 </resources>

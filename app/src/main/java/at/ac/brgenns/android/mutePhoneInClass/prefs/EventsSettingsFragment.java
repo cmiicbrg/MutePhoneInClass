@@ -89,7 +89,7 @@ public class EventsSettingsFragment extends PreferenceFragment
                         getString(R.string.alarms_only));
             }
 //            if (prefs.contains(SettingKeys.Wifi.SSID + "_" + id)) {
-            if (!prefs.contains(SettingKeys.Kusss.USER + "_" + id) &&
+            if (!prefs.contains(SettingKeys.Kusss.USER + "_" + id) && !prefs.contains(SettingKeys.ICS.ICS_URL + "_" + id) &&
                     prefs.contains(SettingKeys.Wifi.SSID + "_" + id)) {
                 final Preference p = new Preference(getActivity());
                 p.setIcon(R.mipmap.ic_stat_name);
@@ -126,6 +126,24 @@ public class EventsSettingsFragment extends PreferenceFragment
                     }
                 });
                 rules.addPreference(p);
+            } else if (prefs.contains(SettingKeys.ICS.ICS_URL + "_" + id)) {
+                final Preference p = new Preference(getActivity());
+                p.setIcon(R.drawable.ic_account_black_24dp);
+                p.setTitle(getString(R.string.ics) + " - " +
+                        prefs.getString(SettingKeys.ICS.ICS_URL + "_" + id, "").substring(0,25));
+                p.setSummary(prefs.getString(SettingKeys.Wifi.SSID + "_" + id,
+                        getString(R.string.ignore_wifi)) + ", " + soundProfileName);
+                p.setPersistent(false);
+                p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Intent intent = new Intent(getActivity(), ICSSettingsActivity.class);
+                        intent.putExtra(MuteSettingsActivity.SETTING_ID, id);
+                        startActivity(intent);
+                        return true;
+                    }
+                });
+                rules.addPreference(p);
             }
         }
 
@@ -138,7 +156,6 @@ public class EventsSettingsFragment extends PreferenceFragment
             public boolean onPreferenceClick(Preference preference) {
                 RuleTypeChooser chooseRuleType = new RuleTypeChooser();
                 chooseRuleType.show(getFragmentManager(), "wekd");
-//                ((MuteSettingsActivity) getActivity()).runScanAndShowWifi();
                 return true;
             }
         });

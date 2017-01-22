@@ -5,15 +5,13 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 
-import java.lang.annotation.Target;
-
 import at.ac.brgenns.android.mutePhoneInClass.R;
 
 /**
  * Created by Christoph on 28.05.2016.
  */
 @TargetApi(Build.VERSION_CODES.M)
-public class KusssSettingsActivity extends AppCompatPreferenceActivity {
+public class ICSSettingsActivity extends AppCompatPreferenceActivity {
 
     private String settingID;
 
@@ -23,7 +21,7 @@ public class KusssSettingsActivity extends AppCompatPreferenceActivity {
         Intent intent = getIntent();
         settingID = intent.getStringExtra(MuteSettingsActivity.SETTING_ID);
 
-        setContentView(R.layout.activity_kusss_settings);
+        setContentView(R.layout.activity_ics_settings);
 
     }
 
