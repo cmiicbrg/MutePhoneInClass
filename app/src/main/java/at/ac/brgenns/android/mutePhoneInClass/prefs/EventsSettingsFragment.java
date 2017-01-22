@@ -76,24 +76,27 @@ public class EventsSettingsFragment extends PreferenceFragment
         root.addPreference(rules);
 
         for (final String id : IDs) {
-            if (prefs.contains(SettingKeys.Wifi.SSID + "_" + id)) {
+            String soundProfile_id = prefs.getString(
+                    SettingKeys.Wifi.SOUND_PROFILE + "_" + id, "0");
+            String soundProfileName = "";
+            if (soundProfile_id == "0") {
+                soundProfileName = getString(R.string.alarms_only);
+            } else if (soundProfile_id == "1") {
+                soundProfileName = getString(R.string.total_silence);
+            } else {
+                soundProfileName = prefs.getString(
+                        SettingKeys.SoundProfile.RULE_NAME + "_" + soundProfile_id,
+                        getString(R.string.alarms_only));
+            }
+//            if (prefs.contains(SettingKeys.Wifi.SSID + "_" + id)) {
+            if (!prefs.contains(SettingKeys.Kusss.USER + "_" + id) &&
+                    prefs.contains(SettingKeys.Wifi.SSID + "_" + id)) {
                 final Preference p = new Preference(getActivity());
                 p.setIcon(R.mipmap.ic_stat_name);
                 p.setTitle(prefs.getString(SettingKeys.Wifi.RULE_NAME + "_" + id,
                         prefs.getString(SettingKeys.Wifi.SSID + "_" + id, "")));
-                String soundProfile_id = prefs.getString(
-                        SettingKeys.Wifi.SOUND_PROFILE + "_" + id, "0");
-                String summary = "";
-                if (soundProfile_id == "0") {
-                    summary = getString(R.string.alarms_only);
-                } else if (soundProfile_id == "1") {
-                    summary = getString(R.string.total_silence);
-                } else {
-                    summary = prefs.getString(
-                            SettingKeys.SoundProfile.RULE_NAME + "_" + soundProfile_id,
-                            getString(R.string.alarms_only));
-                }
-                p.setSummary(summary);
+
+                p.setSummary(soundProfileName);
                 p.setPersistent(false);
                 p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
@@ -108,8 +111,10 @@ public class EventsSettingsFragment extends PreferenceFragment
             } else if (prefs.contains(SettingKeys.Kusss.USER + "_" + id)) {
                 final Preference p = new Preference(getActivity());
                 p.setIcon(R.drawable.ic_account_black_24dp);
-                p.setTitle(R.string.kusss);
-                p.setSummary(prefs.getString(SettingKeys.Kusss.USER + "_" + id, ""));
+                p.setTitle(getString(R.string.kusss) + " - " +
+                        prefs.getString(SettingKeys.Kusss.USER + "_" + id, ""));
+                p.setSummary(prefs.getString(SettingKeys.Wifi.SSID + "_" + id,
+                        getString(R.string.ignore_wifi)) + ", " + soundProfileName);
                 p.setPersistent(false);
                 p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override

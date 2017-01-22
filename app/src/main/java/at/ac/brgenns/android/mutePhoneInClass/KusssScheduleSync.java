@@ -110,37 +110,45 @@ public class KusssScheduleSync extends AsyncTask<String, Void, Void> {
                             AccountManager.get(context);
                     String password = accountManager.getPassword(account);
 
-                    Log.d(TAG, "password retrieved" + password.length());
-                    try {
-                        Calendar calendar = getCalendar(finalUserName, password);
-                        Period period =
-                                new Period(new DateTime(java.util.Calendar.getInstance().getTime()),
-                                        new Dur(52));
-                        PeriodRule[] rules = {new PeriodRule(period)};
-                        Filter filter = new Filter(rules, Filter.MATCH_ANY);
-                        Collection<VEvent> eventsList =
-                                filter.filter(calendar.getComponents(Component.VEVENT));
-                        PriorityQueue<VEvent> events = new PriorityQueue<>(200,
-                                new Comparator<VEvent>() {
-                                    @Override
-                                    public int compare(VEvent e1, VEvent e2) {
-                                        Date d1 = e1.getStartDate().getDate();
-                                        Date d2 = e2.getStartDate().getDate();
-                                        return d1.compareTo(d2);
-                                    }
-                                });
-                        for (VEvent event : eventsList) {
-                            events.add(event); // with addAll the result seems not to be sorted
+                    if (password != null) {
+                        Log.d(TAG, "password retrieved" + password.length());
+                        if (password.length() > 0) {
+                            try {
+                                Calendar calendar = getCalendar(finalUserName, password);
+                                Period period =
+                                        new Period(new DateTime(
+                                                java.util.Calendar.getInstance().getTime()),
+                                                new Dur(52));
+                                PeriodRule[] rules = {new PeriodRule(period)};
+                                Filter filter = new Filter(rules, Filter.MATCH_ANY);
+                                Collection<VEvent> eventsList =
+                                        filter.filter(calendar.getComponents(Component.VEVENT));
+                                PriorityQueue<VEvent> events = new PriorityQueue<>(200,
+                                        new Comparator<VEvent>() {
+                                            @Override
+                                            public int compare(VEvent e1, VEvent e2) {
+                                                Date d1 = e1.getStartDate().getDate();
+                                                Date d2 = e2.getStartDate().getDate();
+                                                return d1.compareTo(d2);
+                                            }
+                                        });
+                                for (VEvent event : eventsList) {
+                                    events.add(
+                                            event); // with addAll the result seems not to be sorted
+                                }
+                                while (!events.isEmpty()) {
+                                    VEvent event = events.poll();
+                                    SimpleDateFormat formatDate =
+                                            new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                                    Date date = event.getStartDate().getDate();
+                                    Log.d(TAG,
+                                            formatDate.format(date) + " " +
+                                                    event.getSummary().getValue());
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
-                        while (!events.isEmpty()) {
-                            VEvent event = events.poll();
-                            SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                            Date date = event.getStartDate().getDate();
-                            Log.d(TAG,
-                                    formatDate.format(date) + " " + event.getSummary().getValue());
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
                     }
                 }
             }

@@ -22,7 +22,7 @@ import at.ac.brgenns.android.mutePhoneInClass.R;
 public class UsernamePasswordPreference extends DialogPreference {
 
     private String userName;
-    private String password;
+    //    private String password;
     private EditText usernameInput;
     private EditText passwordInput;
 
@@ -52,14 +52,21 @@ public class UsernamePasswordPreference extends DialogPreference {
 //    @TargetApi(Build.VERSION_CODES.M)
     protected void onDialogClosed(boolean positiveResult) {
         if (positiveResult) {
-            userName = String.valueOf(usernameInput.getText());
-            password = String.valueOf(passwordInput.getText());
-            if (userName != null && password != null) {
-                Account account = new Account(userName, AccountAuthenticatorService.AUTH_TYPE);
+            String newUserName = String.valueOf(usernameInput.getText());
+            String newPassword = String.valueOf(passwordInput.getText());
+            if (newUserName != null && newPassword != null) {
                 AccountManager accountManager = AccountManager.get(this.getContext());
-                boolean success = accountManager.addAccountExplicitly(account, password, null);
+                //this is a litte bit brute force, but helps to make no mess in the accounts
+                if (userName != null) {
+                    Account account = new Account(userName, AccountAuthenticatorService.AUTH_TYPE);
+                    accountManager.removeAccountExplicitly(account);
+                }
+                userName = newUserName;
+                Account account = new Account(userName, AccountAuthenticatorService.AUTH_TYPE);
+                boolean success = accountManager.addAccountExplicitly(account, newPassword, null);
                 if (success) {
                     persistString(userName);
+                    setSummary(userName);
                 }
             }
         }
@@ -74,6 +81,7 @@ public class UsernamePasswordPreference extends DialogPreference {
                 : (defaultValue != null) ? defaultValue.toString() : "";
         if (restorePersistedValue) {
             this.userName = getPersistedString(def);
+            setSummary(this.userName);
         } else {
             this.userName = (String) defaultValue;
         }

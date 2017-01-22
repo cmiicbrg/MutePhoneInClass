@@ -55,5 +55,7 @@
     <string name="kusss">Kusss</string>
     <string name="kusss_setting_edit">Edit Kusss based rule</string>
     <string name="user_pass">Username and Password</string>
+    <string name="mute_only_on_wifi">Mute only if selected Wifi has been found</string>
+    <string name="ignore_wifi">Ignore WIFI</string>
 
 </resources>

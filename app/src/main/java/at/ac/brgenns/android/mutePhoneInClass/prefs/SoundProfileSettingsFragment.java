@@ -103,6 +103,7 @@ public class SoundProfileSettingsFragment extends PreferenceFragment {
         if (name.getSummary().toString().isEmpty()) {
             name.setSummary(getString(R.string.new_sound_profile_name));
         }
+
         return name;
     }
 
@@ -116,9 +117,7 @@ public class SoundProfileSettingsFragment extends PreferenceFragment {
         enable.setKey("ENABLE_" + key + "_" + id);
         enable.setTitle(title);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean defaultValue = PreferenceManager
-                .getDefaultSharedPreferences(getActivity())
-                .getInt(key + "_" + id, defaultVolume) >= 0;
+        boolean defaultValue = prefs.getInt(key + "_" + id, defaultVolume) >= 0;
         enable.setDefaultValue(defaultValue);
         enable.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
