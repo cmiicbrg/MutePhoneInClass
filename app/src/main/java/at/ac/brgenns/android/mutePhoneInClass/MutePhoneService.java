@@ -34,10 +34,7 @@ import at.ac.brgenns.android.mutePhoneInClass.prefs.SettingKeys;
  * Created by android on 07.04.2016.
  */
 public class MutePhoneService extends Service {
-    private static final String TAG = MutePhoneService.class.getSimpleName();
-    private final int DEFAULT_ALARM_INTERVAL = 3; //in Minutes
     public static final String TASK = "Task";
-
     public static final int WIFI_RULE_ADDED = 0;
     public static final int BOOT = 1;
     public static final int WIFI_RESULT = 2;
@@ -46,7 +43,9 @@ public class MutePhoneService extends Service {
     public static final int DISABLE = 5;
     public static final int ENABLE = 6;
     public static final int KUSS_ACCOUNT = 7;
-
+    private static final String TAG = MutePhoneService.class.getSimpleName();
+    // TODO: Set to 3 in Production.
+    private final int DEFAULT_ALARM_INTERVAL = 1; //in Minutes
     private AudioManager audioManager;
     private AlarmManager alarmManager;
     private PendingIntent pendingNextScan;
@@ -56,6 +55,25 @@ public class MutePhoneService extends Service {
     private SharedPreferences prefs;
     private Set<String> prefIDs;
     private String reason = "unknown";
+
+    public static Set<String> scanResultToUniqueSSIDStringSet(List<ScanResult> scanResults) {
+        Set<String> scanResultSet = new TreeSet<>();
+        for (ScanResult scanResult : scanResults) {
+            if (!scanResult.SSID.isEmpty()) {
+                scanResultSet.add(scanResult.SSID);
+            }
+        }
+        return scanResultSet;
+    }
+
+    public static Set<String> configuredNetworksToUniqueSSIDStringSet(
+            List<WifiConfiguration> configuredNetworks) {
+        Set<String> configuredNetworksSet = new TreeSet<>();
+        for (WifiConfiguration config : configuredNetworks) {
+            configuredNetworksSet.add(config.SSID.replace("\"", ""));
+        }
+        return configuredNetworksSet;
+    }
 
     @Override
     public void onCreate() {
@@ -106,13 +124,13 @@ public class MutePhoneService extends Service {
                         wifiManager.startScan();
                     }
                     // Schedule new Alarm (Really? why not only in WIFI_Result -> Because we don't request a scan always!)
-                    setAlarm(3, ALARM);
+                    setAlarm(DEFAULT_ALARM_INTERVAL, ALARM);
                     break;
                 case WIFI_RESULT:
                     // We received a WIFI RESULT - maybe because another app or the system requested a scan
                     // in each case we can reschedule the alarm
                     cancelAlarm();
-                    setAlarm(3, ALARM);
+                    setAlarm(DEFAULT_ALARM_INTERVAL, ALARM);
                     // MUTE or UNMUTE Phone
                     if (!muteBasedOnScanResult()) {
                         unMute();
@@ -122,7 +140,7 @@ public class MutePhoneService extends Service {
                     // if disconected we should probably set a timeout
                     if (muteBasedOnConnectionInfo()) {
                         cancelAlarm(); // Is it necessary to cancel the Alarm? Docs say it will remove Alarm from Schedule if there is already a pending Alarm...
-                        setAlarm(3, ALARM);
+                        setAlarm(1, ALARM);
                     } // TODO: else if state is disconnecting
                     // set alarm in 1 Minute and set a flag
                     break;
@@ -144,12 +162,12 @@ public class MutePhoneService extends Service {
                         Log.d(TAG, "Requesting Wifi Scan");
                         wifiManager.startScan();
                     }
-                    setAlarm(3, ALARM);
+                    setAlarm(DEFAULT_ALARM_INTERVAL, ALARM);
                     break;
                 case KUSS_ACCOUNT:
                     (new KusssScheduleSync(this)).execute(new String[0]);
                 default:
-                    setAlarm(3, ENABLE);
+                    setAlarm(DEFAULT_ALARM_INTERVAL, ENABLE);
             }
         } else {
             // Make sure we won't be doing any work if there are no rules...
@@ -235,19 +253,26 @@ public class MutePhoneService extends Service {
     }
 
     private void unMute() {
-        audioManager.setRingerMode(
-                prefs.getInt(SettingKeys.LAST_RINGER_MODE, AudioManager.RINGER_MODE_NORMAL));
-        audioManager.setStreamVolume(AudioManager.STREAM_ALARM,
-                prefs.getInt(SettingKeys.LAST_ALARM_VOLUME,
-                        audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM) / 2), 0);
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
-                prefs.getInt(SettingKeys.LAST_MEDIA_VOLUME,
-                        audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) / 2), 0);
-        audioManager.setStreamVolume(AudioManager.STREAM_RING,
-                prefs.getInt(SettingKeys.LAST_RINGER_VOLUME,
-                        audioManager.getStreamMaxVolume(AudioManager.STREAM_RING) / 2), 0);
-        deleteLastAudioSettings();
-
+        //only unMute if we have LastAudioSettings otherwise we would constantly change the volume
+        // otherwise do nothing since the settings have already been restored and deleted!
+        if (prefs.contains(SettingKeys.LAST_RINGER_MODE) &&
+                prefs.contains(SettingKeys.LAST_ALARM_VOLUME) &&
+                prefs.contains(SettingKeys.LAST_MEDIA_VOLUME) &&
+                prefs.contains(SettingKeys.LAST_RINGER_VOLUME)) {
+            audioManager.setRingerMode(
+                    prefs.getInt(SettingKeys.LAST_RINGER_MODE, AudioManager.RINGER_MODE_NORMAL));
+            audioManager.setStreamVolume(AudioManager.STREAM_ALARM,
+                    prefs.getInt(SettingKeys.LAST_ALARM_VOLUME,
+                            audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM) / 2), 0);
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
+                    prefs.getInt(SettingKeys.LAST_MEDIA_VOLUME,
+                            audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) / 2), 0);
+            audioManager.setStreamVolume(AudioManager.STREAM_RING,
+                    prefs.getInt(SettingKeys.LAST_RINGER_VOLUME,
+                            audioManager.getStreamMaxVolume(AudioManager.STREAM_RING) / 2), 0);
+            deleteLastAudioSettings();
+            SilencerNotification.cancel(this);
+        }
     }
 
     private void setSoundProfile(String id) {
@@ -375,25 +400,6 @@ public class MutePhoneService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    public static Set<String> scanResultToUniqueSSIDStringSet(List<ScanResult> scanResults) {
-        Set<String> scanResultSet = new TreeSet<>();
-        for (ScanResult scanResult : scanResults) {
-            if (!scanResult.SSID.isEmpty()) {
-                scanResultSet.add(scanResult.SSID);
-            }
-        }
-        return scanResultSet;
-    }
-
-    public static Set<String> configuredNetworksToUniqueSSIDStringSet(
-            List<WifiConfiguration> configuredNetworks) {
-        Set<String> configuredNetworksSet = new TreeSet<>();
-        for (WifiConfiguration config : configuredNetworks) {
-            configuredNetworksSet.add(config.SSID.replace("\"", ""));
-        }
-        return configuredNetworksSet;
     }
 
     private void enableReceivers() {

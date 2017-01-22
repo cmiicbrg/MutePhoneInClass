@@ -103,7 +103,6 @@ public class KusssScheduleSync extends AsyncTask<String, Void, Void> {
                         prefs.getString(SettingKeys.Kusss.USER + "_" + id, "");
                 if (!userName.isEmpty()) {
                     //TODO: this is just for testing connectivity -> should use another Service with it's own AlarmManager
-                    //This will not work because of an StringIndexOutOfBoundsException in KUSSS API
                     final String finalUserName = userName;
                     Account account = new Account(finalUserName,
                             AccountAuthenticatorService.AUTH_TYPE);
