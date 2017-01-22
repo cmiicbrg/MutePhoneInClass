@@ -32,7 +32,6 @@ public class SettingKeys {
 
     public enum Kusss {
         ENABLE,
-        RULE_NAME,
         USER
     }
 }

@@ -1,36 +1,19 @@
 package at.ac.brgenns.android.mutePhoneInClass.prefs;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.net.wifi.ScanResult;
-import android.net.wifi.WifiConfiguration;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
-import android.preference.ListPreference;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
-import android.preference.SwitchPreference;
 import android.support.annotation.NonNull;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import at.ac.brgenns.android.mutePhoneInClass.MutePhoneService;
 import at.ac.brgenns.android.mutePhoneInClass.R;
 
 /**
  * Created by Christoph on 27.05.2016.
  */
-public class WifiSettingsFragment extends PreferenceFragment {
+public class WifiSettingsFragment extends SettingsFragment {
     private static final String TAG = WifiSettingsFragment.class.getSimpleName();
-    String id = "0";
+//    String id = "0";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -42,7 +25,7 @@ public class WifiSettingsFragment extends PreferenceFragment {
 
         setHasOptionsMenu(true);
 
-        root.addPreference(getEnablePreference());
+        root.addPreference(getEnablePreference(SettingKeys.Wifi.ENABLE));
         root.addPreference(getRuleNamePreference());
         root.addPreference(getSSIDChooserPreference());
         root.addPreference(getSoundProfilePreference());
@@ -52,35 +35,7 @@ public class WifiSettingsFragment extends PreferenceFragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int itemID = item.getItemId();
-        int R_id_action_delete = R.id.action_delete;
-        switch (itemID) {
-            case android.R.id.home:
-                //TODO: check if Preferences are OK and delete already saved Preferences if not
-                getActivity().onBackPressed();
-                return true;
-            case R.id.action_delete:
-                // TODO: should we show a warning?
-                PreferenceHelper.deleteRule(getActivity(), id, SettingKeys.Wifi.class);
-                getActivity().onBackPressed();
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_delete, menu);
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @NonNull
-    private SwitchPreference getEnablePreference() {
-        SwitchPreference enable = new SwitchPreference(getActivity());
-        enable.setKey(SettingKeys.Wifi.ENABLE + "_" + id);
-        enable.setTitle(R.string.rule_enabled);
-        enable.setDefaultValue(true);
-        return enable;
+        return super.onOptionsItemSelected(item, SettingKeys.Wifi.class);
     }
 
     @NonNull
@@ -91,57 +46,6 @@ public class WifiSettingsFragment extends PreferenceFragment {
         name.setDefaultValue(getString(R.string.rule_name_default));
         PreferenceHelper.bindPreferenceSummaryToValue(name);
         return name;
-    }
-
-    @NonNull
-    private ListPreference getSSIDChooserPreference() {
-        ListPreference ssid = new ListPreference(getActivity());
-        ssid.setKey(SettingKeys.Wifi.SSID + "_" + id);
-        ssid.setTitle(R.string.mute_on_wifi);
-        WifiManager wifi = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
-        Set<String> SSIDStringSet = new HashSet<>();
-        SSIDStringSet.add(PreferenceManager
-                .getDefaultSharedPreferences(ssid.getContext())
-                .getString(ssid.getKey(), ""));
-        SSIDStringSet.addAll(MutePhoneService.scanResultToUniqueSSIDStringSet(wifi.getScanResults()));
-        SSIDStringSet.addAll(MutePhoneService.configuredNetworksToUniqueSSIDStringSet(wifi.getConfiguredNetworks()));
-        String[] ssidsFoundArray = new String[SSIDStringSet.size()];
-        SSIDStringSet.toArray(ssidsFoundArray);
-        ssid.setEntries(ssidsFoundArray);
-        ssid.setEntryValues(ssidsFoundArray);
-        PreferenceHelper.bindPreferenceSummaryToValue(ssid);
-        return ssid;
-    }
-
-    @NonNull
-    private ListPreference getSoundProfilePreference() {
-        ListPreference soundProfile = new ListPreference(getActivity());
-        soundProfile.setKey(SettingKeys.Wifi.SOUND_PROFILE + "_" + id);
-        soundProfile.setTitle(R.string.sound_profile_title);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        Set<String> IDs = prefs.getStringSet(SettingKeys.RULES_UIDS, new HashSet<String>());
-        String[] entries = new String[IDs.size() + 2];
-        String[] values = new String[IDs.size() + 2];
-        int i = 0;
-        entries[i] = getString(R.string.alarms_only);
-        values[i++] = "0";
-        entries[i] = getString(R.string.total_silence);
-        values[i++] = "1";
-
-        for (final String id : IDs) {
-            if (prefs.contains(SettingKeys.SoundProfile.RINGER_VOLUME + "_" + id)) {
-                entries[i] = prefs.getString(SettingKeys.SoundProfile.RULE_NAME + "_" + id,
-                        getString(R.string.rule_name_default));
-                values[i++] = id;
-            }
-        }
-
-        soundProfile.setEntries(Arrays.copyOfRange(entries, 0, i));
-        soundProfile.setEntryValues(Arrays.copyOfRange(values, 0, i));
-        soundProfile.setDefaultValue("0");
-
-        PreferenceHelper.bindPreferenceSummaryToValue(soundProfile);
-        return soundProfile;
     }
 
 }
