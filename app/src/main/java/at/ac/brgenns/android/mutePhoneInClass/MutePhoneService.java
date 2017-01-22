@@ -44,8 +44,7 @@ public class MutePhoneService extends Service {
     public static final int ENABLE = 6;
     public static final int KUSS_ACCOUNT = 7;
     private static final String TAG = MutePhoneService.class.getSimpleName();
-    // TODO: Set to 3 in Production.
-    private final int DEFAULT_ALARM_INTERVAL = 1; //in Minutes
+    private final int DEFAULT_ALARM_INTERVAL = 3; //in Minutes
     private AudioManager audioManager;
     private AlarmManager alarmManager;
     private PendingIntent pendingNextScan;
