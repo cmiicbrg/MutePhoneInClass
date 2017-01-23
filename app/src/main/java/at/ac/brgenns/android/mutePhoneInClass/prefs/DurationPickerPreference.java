@@ -121,7 +121,6 @@ public class DurationPickerPreference extends DialogPreference
             updateTitle();
         }
         Intent mutePhoneService = new Intent(this.getContext(), MutePhoneService.class);
-        mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.DISABLE);
         this.getContext().startService(mutePhoneService);
     }
 

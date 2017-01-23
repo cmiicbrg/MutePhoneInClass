@@ -42,7 +42,7 @@ public class WebUntisSettingsFragment extends SettingsFragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item, SettingKeys.Kusss.class);
+        return super.onOptionsItemSelected(item, SettingKeys.WebUntis.class);
     }
 
     private Preference getUsernamePasswordPreference() {

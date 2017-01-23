@@ -47,7 +47,7 @@ public class ICSSettingsFragment extends SettingsFragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item, SettingKeys.Kusss.class);
+        return super.onOptionsItemSelected(item, SettingKeys.ICS.class);
     }
 
     private SwitchPreference getEnableWifiPreference(String title,

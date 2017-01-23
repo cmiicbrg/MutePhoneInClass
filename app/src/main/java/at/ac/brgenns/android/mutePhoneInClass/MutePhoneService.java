@@ -20,10 +20,12 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import at.ac.brgenns.android.mutePhoneInClass.prefs.PreferenceHelper;
 import at.ac.brgenns.android.mutePhoneInClass.prefs.SettingKeys;
 
 //import java.util.Date;
@@ -40,11 +42,12 @@ public class MutePhoneService extends Service {
     public static final int WIFI_RESULT = 2;
     public static final int ALARM = 3;
     public static final int WIFI_STATE_CHANGE = 4;
-    public static final int DISABLE = 5;
     public static final int ENABLE = 6;
     public static final int KUSS_ACCOUNT = 7;
+    public static final int APP_START = 8;
     private static final String TAG = MutePhoneService.class.getSimpleName();
-    private final int DEFAULT_ALARM_INTERVAL = 3; //in Minutes
+    //TODO! Alarm Interval
+    private final int DEFAULT_ALARM_INTERVAL = 1; //in Minutes
     private AudioManager audioManager;
     private AlarmManager alarmManager;
     private PendingIntent pendingNextScan;
@@ -143,12 +146,6 @@ public class MutePhoneService extends Service {
                     } // TODO: else if state is disconnecting
                     // set alarm in 1 Minute and set a flag
                     break;
-                case DISABLE:
-                    unMute();
-                    cancelAlarm();
-                    SilencerNotification.cancel(this);
-                    disableReceivers();
-                    break;
                 case ENABLE:
                     if (!prefs.getBoolean(SettingKeys.MUTE_ENABLED, true)) {
                         SharedPreferences.Editor editor = prefs.edit();
@@ -183,13 +180,16 @@ public class MutePhoneService extends Service {
     }
 
     private boolean hasRules() {
-        for (String id : prefIDs) {
-            if (prefs.contains(SettingKeys.Wifi.SSID + "_" + id) ||
-                    prefs.contains(SettingKeys.Kusss.USER + "_" + id)) {
-                return true;
-            }
+        boolean hasRules = false;
+        Iterator<String> it = prefIDs.iterator();
+        while (it.hasNext() && !hasRules) {
+            String id = it.next();
+            hasRules = prefs.contains(SettingKeys.Wifi.SSID + "_" + id) ||
+                    prefs.contains(SettingKeys.Kusss.USER + "_" + id) ||
+                    prefs.contains(SettingKeys.ICS.ICS_URL + "_" + id) ||
+                    prefs.contains(SettingKeys.WebUntis.SERVER_URL + "_" + id);
         }
-        return false;
+        return hasRules;
     }
 
     private boolean muteBasedOnScanResult() {
@@ -200,18 +200,19 @@ public class MutePhoneService extends Service {
         // first found Rule takes precedence -> should we have a way to sort rules?
         // or better -> Rules based on Scheduled Classes take precedence! -> TODO
         for (String id : prefIDs) {
-            String cKey = SettingKeys.Wifi.SSID + "_" + id;
-            Log.d(TAG, cKey);
-            if (prefs.contains(cKey) &&
-                    prefs.getBoolean(SettingKeys.Wifi.ENABLE + "_" + id, true) &&
-                    !mute) {
-                if (SSIDs.contains(prefs.getString(cKey, ""))) {
-                    String cSoundProfile =
-                            prefs.getString(SettingKeys.Wifi.SOUND_PROFILE + "_" + id, "0");
-                    Log.d(TAG, cSoundProfile);
-                    reason = prefs.getString(cKey, "");
-                    setSoundProfile(cSoundProfile);
-                    mute = true;
+            if (PreferenceHelper.getRuleType(prefs,id) == SettingKeys.SettingType.WIFI) {
+                String cKey = SettingKeys.Wifi.SSID + "_" + id;
+                Log.d(TAG, cKey);
+                if (prefs.getBoolean(SettingKeys.Wifi.ENABLE + "_" + id, true) &&
+                        !mute) {
+                    if (SSIDs.contains(prefs.getString(cKey, ""))) {
+                        String cSoundProfile =
+                                prefs.getString(SettingKeys.Wifi.SOUND_PROFILE + "_" + id, "0");
+                        Log.d(TAG, cSoundProfile);
+                        reason = prefs.getString(cKey, "");
+                        setSoundProfile(cSoundProfile);
+                        mute = true;
+                    }
                 }
             }
         }
@@ -229,7 +230,7 @@ public class MutePhoneService extends Service {
             // first found Rule takes precedence -> should we have a way to sort rules?
             // or better -> Rules based on Scheduled Classes take precedence! -> TODO
             for (String id : prefIDs) {
-                if (prefs.contains(SettingKeys.Wifi.SSID + id) &&
+                if (PreferenceHelper.getRuleType(prefs,id) == SettingKeys.SettingType.WIFI &&
                         prefs.getBoolean(SettingKeys.Wifi.ENABLE + "_" + id, true) &&
                         !mute) {
                     if (prefs.getString(SettingKeys.Wifi.SSID + "_" + id, "")
@@ -371,6 +372,7 @@ public class MutePhoneService extends Service {
     }
 
     private void setAlarm(int inMinutes, int intentExtra) {
+        Log.d(TAG, "Setting alarm in " + inMinutes);
         Intent nextScan = new Intent(getApplicationContext(), AlarmReceiver.class);
         nextScan.putExtra(TASK, intentExtra);
         pendingNextScan =

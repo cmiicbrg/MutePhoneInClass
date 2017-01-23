@@ -75,6 +75,33 @@ public class PreferenceHelper {
         return success;
     }
 
+    public static <T extends Enum<T>> void validateOrDeleteRule(Activity activity, String id,
+                                                                Class<T> settingType) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        Set<String> ids = prefs.getStringSet(SettingKeys.RULES_UIDS, new HashSet<String>());
+        if (ids.contains(id)) {
+            boolean valid = prefs.contains(SettingKeys.Wifi.SSID + "_" + id) ||
+                    prefs.contains(SettingKeys.Kusss.USER + "_" + id) ||
+                    prefs.contains(SettingKeys.ICS.ICS_URL + "_" + id) ||
+                    (prefs.contains(SettingKeys.WebUntis.SERVER_URL + "_" + id) &&
+                            prefs.contains(SettingKeys.WebUntis.SCHOOL_NAME + "_" + id));
+            if (!valid) {
+                Set<String> idsToStore = new HashSet<>(ids);
+                idsToStore.remove(id);
+                SharedPreferences.Editor editor = prefs.edit();
+                for (T key : EnumSet.allOf(settingType)) {
+                    String prefsKey = key.name() + "_" + id;
+                    if (prefs.contains(prefsKey)) {
+                        editor.remove(prefsKey);
+                    }
+                }
+                editor.putStringSet(SettingKeys.RULES_UIDS, idsToStore);
+                editor.commit();
+            }
+        }
+
+    }
+
     public static <T extends Enum<T>> boolean deleteRule(Activity activity, String id,
                                                          Class<T> settingType) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
@@ -96,4 +123,24 @@ public class PreferenceHelper {
         return success;
     }
 
+    public static SettingKeys.SettingType getRuleType(SharedPreferences prefs, String id) {
+        if (!prefs.contains(SettingKeys.Kusss.USER + "_" + id) &&
+                !prefs.contains(SettingKeys.WebUntis.SERVER_URL + "_" + id) &&
+                !prefs.contains(SettingKeys.ICS.ICS_URL + "_" + id) &&
+                prefs.contains(SettingKeys.Wifi.SSID + "_" + id)) {
+            return SettingKeys.SettingType.WIFI;
+        } else if (prefs.contains(SettingKeys.Kusss.USER + "_" + id)) {
+            return SettingKeys.SettingType.KUSSS;
+        } else if (prefs.contains(SettingKeys.ICS.ICS_URL + "_" + id)) {
+            return SettingKeys.SettingType.ICS;
+        } else if (prefs.contains(SettingKeys.WebUntis.SERVER_URL + "_" + id)) {
+            return SettingKeys.SettingType.WEBUNTIS;
+        } else if (prefs.contains(SettingKeys.SoundProfile.RULE_NAME + "_" + id)) {
+            //NOT the best check in else if
+            return SettingKeys.SettingType.SOUNDPROFILE;
+        } else {
+            return SettingKeys.SettingType.UNDEFINED;
+        }
+
+    }
 }

@@ -109,7 +109,7 @@ public class SettingsFragment extends PreferenceFragment {
         int R_id_action_delete = R.id.action_delete;
         switch (itemID) {
             case android.R.id.home:
-                //TODO: check if Preferences are OK and delete already saved Preferences if not
+                PreferenceHelper.validateOrDeleteRule(getActivity(), id, keysClass);
                 getActivity().onBackPressed();
                 return true;
             case R.id.action_delete:

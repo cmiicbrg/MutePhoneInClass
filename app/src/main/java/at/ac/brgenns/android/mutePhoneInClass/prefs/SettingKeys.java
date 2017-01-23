@@ -15,6 +15,14 @@ public class SettingKeys {
     public static final String DISABLED_FOR = "disabled_for";
     public static final String KUSS_USER = "kuss_user";
 
+    public enum SettingType {
+        WIFI,
+        SOUNDPROFILE,
+        KUSSS,
+        ICS,
+        WEBUNTIS,
+        UNDEFINED
+    }
     public enum Wifi {
         ENABLE,
         RULE_NAME,
@@ -32,17 +40,26 @@ public class SettingKeys {
 
     public enum Kusss {
         ENABLE,
-        USER
+        USER,
+        LAST_SYNC,
+        SSID,
+        SOUND_PROFILE
     }
     public enum ICS {
         ENABLE,
-        ICS_URL
+        ICS_URL,
+        LAST_SYNC,
+        SSID,
+        SOUND_PROFILE
     }
     public enum WebUntis {
         ENABLE,
         SERVER_URL,
         SCHOOL_NAME,
         CLASS_NAME,
-        WEBUNTIS_USER
+        WEBUNTIS_USER,
+        LAST_SYNC,
+        SSID,
+        SOUND_PROFILE
     }
 }

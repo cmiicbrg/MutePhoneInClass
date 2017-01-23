@@ -82,6 +82,9 @@ public class MuteSettingsActivity extends AppCompatPreferenceActivity
             RuleTypeChooser chooseRuleType = new RuleTypeChooser();
             chooseRuleType.show(getFragmentManager(), "wekd");
         }
+        Intent mutePhoneService = new Intent(getApplicationContext(), MutePhoneService.class);
+        mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.APP_START);
+        this.getApplicationContext().startService(mutePhoneService);
     }
 
     @TargetApi(Build.VERSION_CODES.M)
