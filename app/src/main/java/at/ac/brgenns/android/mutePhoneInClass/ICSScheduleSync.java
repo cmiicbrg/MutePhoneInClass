@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
@@ -11,10 +12,12 @@ import net.fortuna.ical4j.filter.Filter;
 import net.fortuna.ical4j.filter.PeriodRule;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Period;
+import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.component.VEvent;
 
 import java.io.BufferedReader;
@@ -28,7 +31,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
 import java.net.URLConnection;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -92,35 +94,26 @@ public class ICSScheduleSync extends AsyncTask<String, Void, Void> {
                 try {
                     Calendar calendar =
                             getCalendar(prefs.getString(SettingKeys.ICS.ICS_URL + "_" + id, ""));
-                    Period period =
-                            new Period(new DateTime(
-                                    java.util.Calendar.getInstance().getTime()),
-                                    new Dur(52));
-                    PeriodRule[] rules = {new PeriodRule(period)};
-                    Filter filter = new Filter(rules, Filter.MATCH_ANY);
-                    Collection<VEvent> eventsList =
-                            filter.filter(calendar.getComponents(Component.VEVENT));
-                    PriorityQueue<VEvent> events = new PriorityQueue<>(200,
-                            new Comparator<VEvent>() {
-                                @Override
-                                public int compare(VEvent e1, VEvent e2) {
-                                    Date d1 = e1.getStartDate().getDate();
-                                    Date d2 = e2.getStartDate().getDate();
-                                    return d1.compareTo(d2);
-                                }
-                            });
-                    for (VEvent event : eventsList) {
-                        events.add(
-                                event); // with addAll the result seems not to be sorted
-                    }
-                    while (!events.isEmpty()) {
-                        VEvent event = events.poll();
-                        SimpleDateFormat formatDate =
-                                new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                        Date date = event.getStartDate().getDate();
-                        Log.d(TAG,
-                                formatDate.format(date) + " " +
-                                        event.getSummary().getValue());
+
+                    Collection<VEvent> eventsList = getFilteredvEvents(calendar);
+                    if (!eventsList.isEmpty()) {
+                        PriorityQueue<VEvent> events = getSortedvEvents(eventsList);
+
+                        // Save calendar and next Event
+                        SharedPreferences.Editor editor = prefs.edit();
+                        VEvent nextEvent = events.peek();
+                        editor.putLong(SettingKeys.ICS.NEXT_EVENT_START + "_" + id,
+                                nextEvent.getStartDate().getDate().getTime());
+                        editor.putLong(SettingKeys.ICS.NEXT_EVENT_END + "_" + id,
+                                nextEvent.getEndDate().getDate().getTime());
+                        editor.putString(SettingKeys.ICS.NEXT_EVENT_REASON + "_" + id,
+                                nextEvent.getSummary().getValue());
+                        //save only future events
+                        ComponentList<CalendarComponent> futureEvents = new ComponentList();
+                        futureEvents.addAll(eventsList);
+                        calendar = new Calendar(futureEvents);
+                        editor.putString(SettingKeys.ICS.ICAL + "_" + id, calendar.toString());
+                        editor.commit();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -129,6 +122,35 @@ public class ICSScheduleSync extends AsyncTask<String, Void, Void> {
         }
 
         return null;
+    }
+
+    private static Collection<VEvent> getFilteredvEvents(Calendar calendar) {
+        Period period =
+                new Period(new DateTime(
+                        java.util.Calendar.getInstance().getTime()),
+                        new Dur(26));
+        PeriodRule[] rules = {new PeriodRule(period)};
+        Filter filter = new Filter(rules, Filter.MATCH_ANY);
+        return (Collection<VEvent>) filter.filter(calendar.getComponents(Component.VEVENT));
+    }
+
+    @NonNull
+    private static PriorityQueue<VEvent> getSortedvEvents(Collection<VEvent> eventsList) {
+
+        PriorityQueue<VEvent> events = new PriorityQueue<>(200,
+                new Comparator<VEvent>() {
+                    @Override
+                    public int compare(VEvent e1, VEvent e2) {
+                        Date d1 = e1.getStartDate().getDate();
+                        Date d2 = e2.getStartDate().getDate();
+                        return d1.compareTo(d2);
+                    }
+                });
+        for (VEvent event : eventsList) {
+            events.add(
+                    event); // with addAll the result seems not to be sorted
+        }
+        return events;
     }
 
     private Calendar getCalendar(String url) {

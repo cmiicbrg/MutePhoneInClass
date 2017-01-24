@@ -13,7 +13,6 @@ public class SettingKeys {
     public static final String LAST_RINGER_VOLUME = "last_ringer_volume";
     public static final String LAST_RINGER_MODE = "last_vibrate_state";
     public static final String DISABLED_FOR = "disabled_for";
-    public static final String KUSS_USER = "kuss_user";
 
     public enum SettingType {
         WIFI,
@@ -23,6 +22,7 @@ public class SettingKeys {
         WEBUNTIS,
         UNDEFINED
     }
+
     public enum Wifi {
         ENABLE,
         RULE_NAME,
@@ -50,7 +50,11 @@ public class SettingKeys {
         ICS_URL,
         LAST_SYNC,
         SSID,
-        SOUND_PROFILE
+        SOUND_PROFILE,
+        NEXT_EVENT_START,
+        NEXT_EVENT_END,
+        NEXT_EVENT_REASON,
+        ICAL
     }
     public enum WebUntis {
         ENABLE,

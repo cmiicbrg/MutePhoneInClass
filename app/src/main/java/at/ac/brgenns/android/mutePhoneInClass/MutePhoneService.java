@@ -19,6 +19,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -46,8 +47,12 @@ public class MutePhoneService extends Service {
     public static final int KUSS_ACCOUNT = 7;
     public static final int APP_START = 8;
     private static final String TAG = MutePhoneService.class.getSimpleName();
+    private static final int EVENT_END = 9;
     //TODO! Alarm Interval
     private final int DEFAULT_ALARM_INTERVAL = 1; //in Minutes
+    private final int CALENDAR_SYNC_INTERVAL = 15; //in Minutes
+    private final int KUSS_SYNC_INTERVAL = 360; //in Minutes
+    private final int WEBUNTIS_SYNC_INTERVAL = 720; //in Minutes
     private AudioManager audioManager;
     private AlarmManager alarmManager;
     private PendingIntent pendingNextScan;
@@ -77,6 +82,15 @@ public class MutePhoneService extends Service {
         return configuredNetworksSet;
     }
 
+    private static boolean isScheduleBasedRule(SharedPreferences prefs, String id) {
+        boolean hasScheduleBasedRule;
+        SettingKeys.SettingType ruleType = PreferenceHelper
+                .getRuleType(prefs, id);
+        hasScheduleBasedRule = ruleType == SettingKeys.SettingType.ICS || ruleType ==
+                SettingKeys.SettingType.KUSSS || ruleType == SettingKeys.SettingType.WEBUNTIS;
+        return hasScheduleBasedRule;
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -90,7 +104,9 @@ public class MutePhoneService extends Service {
         Log.d(TAG, "in onStartCommand");
 
         reloadPreferences();
-
+        if (hasScheduleBasedRule()) {
+            maybeSyncSchedules();
+        }
         // only do any work if there are rules...
         // currently the WIFI_RULE_ADDED Flag is set on every addition of a rule. This will also enable the receivers if needed.
         // Set default Task -- Should we use the flag instead?
@@ -117,13 +133,16 @@ public class MutePhoneService extends Service {
                     break;
                 case ALARM:
                 case BOOT:
+                    int alarmInterval = DEFAULT_ALARM_INTERVAL;
                     // Check if connected to one of the WIFIs used for muting
                     // if connected check if state of MUTING is ok
-                    if (!muteBasedOnConnectionInfo()) {
+                    if (hasWifiRule() && !muteBasedOnConnectionInfo()) {
                         // else the WIFI used for muting might not be the one the phone is currently connected to
                         // Request Scan
                         Log.d(TAG, "Requesting Wifi Scan");
                         wifiManager.startScan();
+                    } else if (hasScheduleBasedRule()) {
+                        muteBasedOnSchedule();
                     }
                     // Schedule new Alarm (Really? why not only in WIFI_Result -> Because we don't request a scan always!)
                     setAlarm(DEFAULT_ALARM_INTERVAL, ALARM);
@@ -140,7 +159,7 @@ public class MutePhoneService extends Service {
                     break;
                 case WIFI_STATE_CHANGE:
                     // if disconected we should probably set a timeout
-                    if (muteBasedOnConnectionInfo()) {
+                    if (muteBasedOnConnectionInfo() && hasWifiRule()) {
                         cancelAlarm(); // Is it necessary to cancel the Alarm? Docs say it will remove Alarm from Schedule if there is already a pending Alarm...
                         setAlarm(1, ALARM);
                     } // TODO: else if state is disconnecting
@@ -179,6 +198,83 @@ public class MutePhoneService extends Service {
         return START_STICKY;
     }
 
+    private void muteBasedOnSchedule() {
+        Iterator<String> it = prefIDs.iterator();
+        boolean mute = false;
+        long now = (new Date()).getTime();
+        while (it.hasNext() && !mute) {
+            String id = it.next();
+            if (isScheduleBasedRule(prefs, id)) {
+                long nextEventStart = prefs.getLong(SettingKeys.ICS.NEXT_EVENT_START + "_" + id, 0);
+                long nextEventEnd = prefs.getLong(SettingKeys.ICS.NEXT_EVENT_END + "_" + id, 0);
+                String nextEventSummary =
+                        prefs.getString(SettingKeys.ICS.NEXT_EVENT_REASON + "_" + id, "");
+
+                if (nextEventStart <= now && now < nextEventEnd) {
+                    reason = nextEventSummary;
+                    mute = true;
+                    setSoundProfile(
+                            prefs.getString(SettingKeys.Wifi.SOUND_PROFILE + "_" + id, "0"));
+                    cancelAlarm();
+                    int nextAlarmInMinutes =
+                            (int) Math.ceil((nextEventEnd - now) / (60.0 * 1000.0));
+                    setAlarm(nextAlarmInMinutes, EVENT_END);
+                } else {
+                    // No unmute here because other rule could apply
+//                    unMute();
+                }
+            }
+        }
+    }
+
+    private boolean hasWifiRule() {
+        boolean hasWifiRule = false;
+        Iterator<String> it = prefIDs.iterator();
+        while (it.hasNext() && !hasWifiRule) {
+            String id = it.next();
+            hasWifiRule = PreferenceHelper.getRuleType(prefs, id) == SettingKeys.SettingType.WIFI;
+        }
+        return hasWifiRule;
+    }
+
+    private boolean hasScheduleBasedRule() {
+        boolean hasScheduleBasedRule = false;
+        Iterator<String> it = prefIDs.iterator();
+        while (it.hasNext() && !hasScheduleBasedRule) {
+            String id = it.next();
+            hasScheduleBasedRule = isScheduleBasedRule(prefs, id);
+        }
+        return hasScheduleBasedRule;
+    }
+
+    private void maybeSyncSchedules() {
+        for (String id : prefIDs) {
+            long lastSync = 0;
+            long now = (new Date()).getTime();
+            switch (PreferenceHelper.getRuleType(prefs, id)) {
+                case ICS:
+                    lastSync = prefs.getLong(SettingKeys.ICS.LAST_SYNC + "_" + id, 0);
+                    if (now - lastSync > CALENDAR_SYNC_INTERVAL * 60 * 1000) {
+                        (new ICSScheduleSync(this)).execute(new String[0]);
+                        //TODO: Set lastsync to now.
+                    }
+                    break;
+                case KUSSS:
+                    lastSync = prefs.getLong(SettingKeys.Kusss.LAST_SYNC + "_" + id, 0);
+                    if (now - lastSync > CALENDAR_SYNC_INTERVAL * 60 * 1000) {
+                        (new KusssScheduleSync(this)).execute(new String[0]);
+                    }
+                    break;
+                case WEBUNTIS:
+//                    lastSync = prefs.getLong(SettingKeys.WebUntis.LAST_SYNC + "_" + id, 0);
+//                    if (now - lastSync > CALENDAR_SYNC_INTERVAL * 60 * 1000) {
+//                        (new WebUntisScheduleSync(this)).execute(new String[0]);
+//                    }
+                    break;
+            }
+        }
+    }
+
     private boolean hasRules() {
         boolean hasRules = false;
         Iterator<String> it = prefIDs.iterator();
@@ -200,7 +296,7 @@ public class MutePhoneService extends Service {
         // first found Rule takes precedence -> should we have a way to sort rules?
         // or better -> Rules based on Scheduled Classes take precedence! -> TODO
         for (String id : prefIDs) {
-            if (PreferenceHelper.getRuleType(prefs,id) == SettingKeys.SettingType.WIFI) {
+            if (PreferenceHelper.getRuleType(prefs, id) == SettingKeys.SettingType.WIFI) {
                 String cKey = SettingKeys.Wifi.SSID + "_" + id;
                 Log.d(TAG, cKey);
                 if (prefs.getBoolean(SettingKeys.Wifi.ENABLE + "_" + id, true) &&
@@ -230,7 +326,7 @@ public class MutePhoneService extends Service {
             // first found Rule takes precedence -> should we have a way to sort rules?
             // or better -> Rules based on Scheduled Classes take precedence! -> TODO
             for (String id : prefIDs) {
-                if (PreferenceHelper.getRuleType(prefs,id) == SettingKeys.SettingType.WIFI &&
+                if (PreferenceHelper.getRuleType(prefs, id) == SettingKeys.SettingType.WIFI &&
                         prefs.getBoolean(SettingKeys.Wifi.ENABLE + "_" + id, true) &&
                         !mute) {
                     if (prefs.getString(SettingKeys.Wifi.SSID + "_" + id, "")
