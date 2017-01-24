@@ -96,24 +96,24 @@ public class ICSScheduleSync extends AsyncTask<String, Void, Void> {
                             getCalendar(prefs.getString(SettingKeys.ICS.ICS_URL + "_" + id, ""));
 
                     Collection<VEvent> eventsList = getFilteredvEvents(calendar);
-                    if (!eventsList.isEmpty()) {
-                        PriorityQueue<VEvent> events = getSortedvEvents(eventsList);
+                        if (!eventsList.isEmpty()) {
+                            PriorityQueue<VEvent> events = getSortedvEvents(eventsList);
 
-                        // Save calendar and next Event
-                        SharedPreferences.Editor editor = prefs.edit();
-                        VEvent nextEvent = events.peek();
-                        editor.putLong(SettingKeys.ICS.NEXT_EVENT_START + "_" + id,
-                                nextEvent.getStartDate().getDate().getTime());
-                        editor.putLong(SettingKeys.ICS.NEXT_EVENT_END + "_" + id,
-                                nextEvent.getEndDate().getDate().getTime());
-                        editor.putString(SettingKeys.ICS.NEXT_EVENT_REASON + "_" + id,
-                                nextEvent.getSummary().getValue());
-                        //save only future events
-                        ComponentList<CalendarComponent> futureEvents = new ComponentList();
-                        futureEvents.addAll(eventsList);
-                        calendar = new Calendar(futureEvents);
-                        editor.putString(SettingKeys.ICS.ICAL + "_" + id, calendar.toString());
-                        editor.commit();
+                            // Save calendar and next Event
+                            SharedPreferences.Editor editor = prefs.edit();
+                            VEvent nextEvent = events.peek();
+                            editor.putLong(SettingKeys.ICS.NEXT_EVENT_START + "_" + id,
+                                    nextEvent.getStartDate().getDate().getTime());
+                            editor.putLong(SettingKeys.ICS.NEXT_EVENT_END + "_" + id,
+                                    nextEvent.getEndDate().getDate().getTime());
+                            editor.putString(SettingKeys.ICS.NEXT_EVENT_REASON + "_" + id,
+                                    nextEvent.getSummary().getValue());
+                            //save only future events
+                            ComponentList<CalendarComponent> futureEvents = new ComponentList();
+                            futureEvents.addAll(eventsList);
+                            calendar = new Calendar(futureEvents);
+                            editor.putString(SettingKeys.ICS.ICAL + "_" + id, calendar.toString());
+                            editor.commit();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -124,7 +124,7 @@ public class ICSScheduleSync extends AsyncTask<String, Void, Void> {
         return null;
     }
 
-    private static Collection<VEvent> getFilteredvEvents(Calendar calendar) {
+    static Collection<VEvent> getFilteredvEvents(Calendar calendar) {
         Period period =
                 new Period(new DateTime(
                         java.util.Calendar.getInstance().getTime()),
@@ -135,7 +135,7 @@ public class ICSScheduleSync extends AsyncTask<String, Void, Void> {
     }
 
     @NonNull
-    private static PriorityQueue<VEvent> getSortedvEvents(Collection<VEvent> eventsList) {
+    static PriorityQueue<VEvent> getSortedvEvents(Collection<VEvent> eventsList) {
 
         PriorityQueue<VEvent> events = new PriorityQueue<>(200,
                 new Comparator<VEvent>() {
@@ -172,4 +172,5 @@ public class ICSScheduleSync extends AsyncTask<String, Void, Void> {
         }
         return null;
     }
+
 }

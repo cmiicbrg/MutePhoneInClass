@@ -43,7 +43,11 @@ public class SettingKeys {
         USER,
         LAST_SYNC,
         SSID,
-        SOUND_PROFILE
+        SOUND_PROFILE,
+        NEXT_EVENT_START,
+        NEXT_EVENT_END,
+        NEXT_EVENT_REASON,
+        ICAL
     }
     public enum ICS {
         ENABLE,
@@ -64,6 +68,20 @@ public class SettingKeys {
         WEBUNTIS_USER,
         LAST_SYNC,
         SSID,
-        SOUND_PROFILE
+        SOUND_PROFILE,
+        NEXT_EVENT_START,
+        NEXT_EVENT_END,
+        NEXT_EVENT_REASON,
+        ICAL
+    }
+
+    public enum GenericSchedule {
+        SSID,
+        SOUND_PROFILE,
+        NEXT_EVENT_START,
+        NEXT_EVENT_END,
+        NEXT_EVENT_REASON,
+        ICAL
+
     }
 }
