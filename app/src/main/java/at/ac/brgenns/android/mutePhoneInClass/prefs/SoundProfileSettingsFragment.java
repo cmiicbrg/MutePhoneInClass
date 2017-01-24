@@ -72,7 +72,6 @@ public class SoundProfileSettingsFragment extends PreferenceFragment {
         int itemID = item.getItemId();
         switch (itemID) {
             case android.R.id.home:
-                //TODO: check if Preferences are OK and delete already saved Preferences if not
                 getActivity().onBackPressed();
                 return true;
             case R.id.action_delete:

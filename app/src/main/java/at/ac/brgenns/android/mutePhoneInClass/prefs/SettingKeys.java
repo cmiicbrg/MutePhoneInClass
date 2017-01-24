@@ -78,6 +78,7 @@ public class SettingKeys {
     public enum GenericSchedule {
         SSID,
         SOUND_PROFILE,
+        LAST_SYNC,
         NEXT_EVENT_START,
         NEXT_EVENT_END,
         NEXT_EVENT_REASON,

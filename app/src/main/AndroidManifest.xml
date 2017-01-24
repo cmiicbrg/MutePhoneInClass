@@ -23,7 +23,7 @@
         <service
             android:name=".MutePhoneService"
             android:exported="false"/>
-        <!--android:process=":MutePhoneService"/>-->
+
 
         <service
             android:name="AccountAuthenticatorService"

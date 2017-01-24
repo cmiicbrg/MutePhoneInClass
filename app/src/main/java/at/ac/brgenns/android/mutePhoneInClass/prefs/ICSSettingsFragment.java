@@ -41,8 +41,7 @@ public class ICSSettingsFragment extends SettingsFragment {
         p.setKey(SettingKeys.ICS.ICS_URL + "_" + id);
         root.addPreference(p);
 
-        root.addPreference(getEnableWifiPreference(getString(R.string.mute_only_on_wifi),
-                SettingKeys.Wifi.SSID));
+        root.addPreference(getEnableWifiPreference(getString(R.string.mute_only_on_wifi)));
         root.addPreference(getSSIDChooserPreference());
         root.addPreference(getSoundProfilePreference());
 

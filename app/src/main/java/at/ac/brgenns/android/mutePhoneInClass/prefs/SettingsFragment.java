@@ -40,28 +40,26 @@ public class SettingsFragment extends PreferenceFragment {
         return enable;
     }
 
-    protected SwitchPreference getEnableWifiPreference(String title,
-                                                       final SettingKeys.Wifi key) {
+    protected SwitchPreference getEnableWifiPreference(String title) {
         SwitchPreference enable = new SwitchPreference(getActivity());
         enable.setPersistent(false);
-        enable.setKey("ENABLE_" + key + "_" + id);
         enable.setTitle(title);
         final SharedPreferences prefs =
                 PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean defaultValue = prefs.getString(key + "_" + id, "") != "";
+        boolean defaultValue = prefs.getString(SettingKeys.GenericSchedule.SSID + "_" + id, "") != "";
         enable.setDefaultValue(defaultValue);
         enable.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 if (newValue instanceof Boolean) {
                     boolean newBool = ((Boolean) newValue).booleanValue();
-                    ListPreference p = (ListPreference) findPreference(key + "_" + id);
+                    ListPreference p = (ListPreference) findPreference(SettingKeys.GenericSchedule.SSID + "_" + id);
                     p.setEnabled(newBool);
                     if (newBool) {
                         p.setSummary(getString(R.string.choose_wifi));
                     } else {
                         p.setSummary("");
-                        prefs.edit().remove(key + "_" + id).commit();
+                        prefs.edit().remove(SettingKeys.GenericSchedule.SSID + "_" + id).commit();
                     }
                 }
                 return true;

@@ -114,12 +114,12 @@ public class PreferenceHelper {
                 !prefs.contains(SettingKeys.ICS.ICS_URL + "_" + id) &&
                 prefs.contains(SettingKeys.Wifi.SSID + "_" + id)) {
             return SettingKeys.SettingType.WIFI;
-        } else if (prefs.contains(SettingKeys.Kusss.USER + "_" + id)) {
-            return SettingKeys.SettingType.KUSSS;
         } else if (prefs.contains(SettingKeys.ICS.ICS_URL + "_" + id)) {
             return SettingKeys.SettingType.ICS;
         } else if (prefs.contains(SettingKeys.WebUntis.SERVER_URL + "_" + id)) {
             return SettingKeys.SettingType.WEBUNTIS;
+        } else if (prefs.contains(SettingKeys.Kusss.USER + "_" + id)) {
+            return SettingKeys.SettingType.KUSSS;
         } else if (prefs.contains(SettingKeys.SoundProfile.ALARM_VOLUME + "_" + id) &&
                 prefs.contains(SettingKeys.SoundProfile.MEDIA_VOLUME + "_" + id) &&
                 prefs.contains(SettingKeys.SoundProfile.RINGER_VOLUME + "_" + id) &&

@@ -17,8 +17,6 @@ public class WifiBroadcastReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        // TODO: This method is called when the BroadcastReceiver is receiving
-        // an Intent broadcast.
         Log.d(TAG, "Intent: " + intent.toString());
         Log.d(TAG, "Action: " + intent.getAction());
         Log.d(TAG, "Extras: " + getExtrasString(intent));

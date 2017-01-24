@@ -24,7 +24,6 @@
     <string name="add_rule">Add rule</string>
     <string name="silencer_notification_title">Mute phone in class</string>
 
-    <!-- TODO: remove this placeholder text -->
     <string name="silencer_notification_text">The phone was muted because %1$s has been found.</string>
     <string name="enable">Enable phone muting</string>
     <string name="rule_delete">Delete rule</string>
@@ -59,5 +58,7 @@
     <string name="WebUntis">WebUntis</string>
     <string name="iCalendar_address">iCalendar address</string>
     <string name="ics">iCal</string>
+    <string name="server_url">Server Name</string>
+    <string name="school_name">School name</string>
 
 </resources>

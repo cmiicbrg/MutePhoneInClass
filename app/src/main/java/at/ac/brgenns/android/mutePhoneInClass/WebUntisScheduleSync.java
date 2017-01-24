@@ -16,6 +16,7 @@ import com.thetransactioncompany.jsonrpc2.client.JSONRPC2SessionException;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.component.VEvent;
 
@@ -42,6 +43,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import at.ac.brgenns.android.mutePhoneInClass.prefs.PreferenceHelper;
 import at.ac.brgenns.android.mutePhoneInClass.prefs.SettingKeys;
 
 import static at.ac.brgenns.android.mutePhoneInClass.ICSScheduleSync.getFilteredvEvents;
@@ -100,11 +102,10 @@ public class WebUntisScheduleSync extends AsyncTask<String, Void, Void> {
         prefIDs = prefs.getStringSet(SettingKeys.RULES_UIDS, new HashSet<String>());
 
         for (String id : prefIDs) {
-            if (prefs.contains(SettingKeys.WebUntis.USER + "_" + id)) {
+            if (PreferenceHelper.getRuleType(prefs,id) == SettingKeys.SettingType.WEBUNTIS) {
                 userName =
                         prefs.getString(SettingKeys.WebUntis.USER + "_" + id, "");
                 if (!userName.isEmpty()) {
-                    //TODO: this is just for testing connectivity -> should use another Service with it's own AlarmManager
                     final String finalUserName = userName;
                     Account account = new Account(finalUserName,
                             AccountAuthenticatorService.AUTH_TYPE);
@@ -116,7 +117,7 @@ public class WebUntisScheduleSync extends AsyncTask<String, Void, Void> {
                         Log.d(TAG, "password retrieved" + password.length());
                         if (password.length() > 0) {
                             try {
-                                Calendar calendar = getCalendar(finalUserName, password);
+                                Calendar calendar = getCalendar(finalUserName, password, id);
 
                                 Collection<VEvent> eventsList = getFilteredvEvents(calendar);
                                 if (!eventsList.isEmpty()) {
@@ -139,16 +140,6 @@ public class WebUntisScheduleSync extends AsyncTask<String, Void, Void> {
                                     editor.putString(SettingKeys.ICS.ICAL + "_" + id,
                                             calendar.toString());
                                     editor.commit();
-                                    //TODO Just for Debugging
-                                    while (!events.isEmpty()) {
-                                        VEvent event = events.poll();
-                                        SimpleDateFormat formatDate =
-                                                new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                                        Date date = event.getStartDate().getDate();
-                                        Log.d(TAG,
-                                                formatDate.format(date) + " " +
-                                                        event.getSummary().getValue());
-                                    }
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -161,19 +152,20 @@ public class WebUntisScheduleSync extends AsyncTask<String, Void, Void> {
         return null;
     }
 
-    private JSONRPC2Response login(String uid, String pwd) throws Exception {
-        String id = "req-001";
+    private JSONRPC2Response login(String uid, String pwd, String id) throws Exception {
+        String rid = "req-001";
         String method = "authenticate";
         Map<String, Object> requestParams = new HashMap<String, Object>();
         requestParams.put("user", uid);
         requestParams.put("password", pwd);
         requestParams.put("client", "TestApp");
 
-        JSONRPC2Request request = new JSONRPC2Request(method, requestParams, id);
+        JSONRPC2Request request = new JSONRPC2Request(method, requestParams, rid);
         try {
-            //TODO -> Read from Settings
+            String url = prefs.getString(SettingKeys.WebUntis.SERVER_URL + "_" + id, "");
+            String schoolName = prefs.getString(SettingKeys.WebUntis.SCHOOL_NAME + "_" + id, "");
             URL serverURL =
-                    new URL("https://hypate.webuntis.com/WebUntis/jsonrpc.do?school=brgenns");
+                    new URL("https://" + url + "/WebUntis/jsonrpc.do?school=" + schoolName);
             mySession = new JSONRPC2Session(serverURL);
             mySession.getOptions().acceptCookies(true);
 
@@ -187,18 +179,18 @@ public class WebUntisScheduleSync extends AsyncTask<String, Void, Void> {
         return null;
     }
 
-    private Calendar getCalendar(String finalUserName, String password) {
+    private Calendar getCalendar(String finalUserName, String password, String id) {
 
         Calendar calendar = new Calendar();
 
         try {
-            JSONRPC2Response login = login(finalUserName, password);
+            JSONRPC2Response login = login(finalUserName, password, id);
             if (login != null && login.indicatesSuccess()) {
 
                 JSONObject resp = new JSONObject(login.getResult().toString());
                 Log.d("response", login.getID().toString());
 
-                String id = "req-002";
+                String rid = "req-002";
                 String method = "getTimetable";
 
                 String personID = resp.getString("personId");
@@ -211,7 +203,7 @@ public class WebUntisScheduleSync extends AsyncTask<String, Void, Void> {
 
                 buildRequestParams(personID, personType, requestParams);
 
-                JSONRPC2Request request = new JSONRPC2Request(method, requestParams, id);
+                JSONRPC2Request request = new JSONRPC2Request(method, requestParams, rid);
                 Log.d("request", request.toString());
 
                 JSONRPC2Response response = mySession.send(request);
@@ -234,32 +226,49 @@ public class WebUntisScheduleSync extends AsyncTask<String, Void, Void> {
     }
 
     private void jsonToCalendar(JSONArray arr, Calendar calendar) {
-        Date eventStart = new Date(0);
-        Date eventEnd = new Date(0);
-        String subject = "test";
+        DateTime eventStart;
+        DateTime eventEnd;
+        String subject;
         for (int i = 0; i < arr.length(); i++) {
             try {
+                subject = "";
                 JSONObject event = (JSONObject) arr.get(i);
                 String date = event.getString("date");
                 String startTime = event.getString("startTime");
                 if (startTime.length() < 4) {
                     startTime = "0" + startTime;
                 }
-                eventStart = new Date(new SimpleDateFormat("yyyyMMdd").parse(date + startTime));
+                eventStart = new DateTime(
+                        new SimpleDateFormat("yyyyMMddHHmm").parse(date + startTime).getTime());
                 String endTime = event.getString("endTime");
                 if (endTime.length() < 4) {
-                    endTime = "0" + startTime;
+                    endTime = "0" + endTime;
                 }
-                eventEnd = new Date(new SimpleDateFormat("yyyyMMdd").parse(date + endTime));
+                eventEnd = new DateTime(
+                        new SimpleDateFormat("yyyyMMddHHmm").parse(date + endTime).getTime());
 
                 JSONArray classArr = event.getJSONArray("kl");
-                for (int j = 0; j < arr.length(); j++) {
-
+                for (int j = 0; j < classArr.length(); j++) {
+                    JSONObject classes = (JSONObject) classArr.get(j);
+                    subject += classes.getString("name");
+                    if (j < classArr.length() - 1) {
+                        subject += ", ";
+                    }
                 }
                 JSONArray subjectArr = event.getJSONArray("su");
-                for (int j = 0; j < arr.length(); j++) {
-
+                if (!subject.isEmpty() && subjectArr.length() > 0) {
+                    subject += " - ";
                 }
+                for (int j = 0; j < subjectArr.length(); j++) {
+                    JSONObject subjects = (JSONObject) subjectArr.get(j);
+                    subject += subjects.getString("name");
+                    if (j < subjectArr.length() - 1) {
+                        subject += ", ";
+                    }
+                }
+
+                VEvent vEvent = new VEvent();
+
                 calendar.getComponents().add(new VEvent(eventStart, eventEnd, subject));
 
             } catch (JSONException e) {

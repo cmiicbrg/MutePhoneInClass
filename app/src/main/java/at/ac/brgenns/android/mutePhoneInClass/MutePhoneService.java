@@ -59,8 +59,7 @@ public class MutePhoneService extends Service {
     public static final int APP_START = 8;
     private static final String TAG = MutePhoneService.class.getSimpleName();
     private static final int EVENT_END = 9;
-    //TODO! Alarm Interval
-    private final int DEFAULT_ALARM_INTERVAL = 1; //in Minutes
+    private final int DEFAULT_ALARM_INTERVAL = 3; //in Minutes
     private final int CALENDAR_SYNC_INTERVAL = 15; //in Minutes
     private final int KUSS_SYNC_INTERVAL = 360; //in Minutes
     private final int WEBUNTIS_SYNC_INTERVAL = 720; //in Minutes
@@ -163,8 +162,7 @@ public class MutePhoneService extends Service {
                     if (muteBasedOnConnectionInfo() && hasWifiRule()) {
                         cancelAlarm(); // Is it necessary to cancel the Alarm? Docs say it will remove Alarm from Schedule if there is already a pending Alarm...
                         setAlarm(1, ALARM);
-                    } // TODO: else if state is disconnecting
-                    // set alarm in 1 Minute and set a flag
+                    }
                     break;
                 case ENABLE:
                     if (!prefs.getBoolean(SettingKeys.MUTE_ENABLED, true)) {
@@ -237,7 +235,8 @@ public class MutePhoneService extends Service {
                         if (wifi.equals(currentSSID)) {
                             reason = nextEventSummary;
                             mute = true;
-                            muteUntilEventEnd(SettingKeys.GenericSchedule.SOUND_PROFILE + "_" + id, nextEventEnd);
+                            muteUntilEventEnd(SettingKeys.GenericSchedule.SOUND_PROFILE + "_" + id,
+                                    nextEventEnd);
 
                         } else {
                             wifiManager.startScan();
@@ -245,7 +244,8 @@ public class MutePhoneService extends Service {
                     } else {
                         reason = nextEventSummary;
                         mute = true;
-                        muteUntilEventEnd(SettingKeys.GenericSchedule.SOUND_PROFILE + "_" + id, nextEventEnd);
+                        muteUntilEventEnd(SettingKeys.GenericSchedule.SOUND_PROFILE + "_" + id,
+                                nextEventEnd);
                     }
                 } else if (now > nextEventEnd) {
                     retrieveNextEventForID(id);
@@ -260,7 +260,7 @@ public class MutePhoneService extends Service {
         String iCal = prefs.getString(SettingKeys.GenericSchedule.ICAL + "_" + id, "");
         if (!iCal.isEmpty()) {
             CalendarBuilder builder = new CalendarBuilder();
-            StringReader sr = new StringReader(iCal);
+            StringReader sr = new StringReader(iCal.trim());
             try {
                 Calendar calendar = builder.build(sr);
                 Collection<VEvent> eventsList = ICSScheduleSync.getFilteredvEvents(calendar);
@@ -270,17 +270,18 @@ public class MutePhoneService extends Service {
                     // Save calendar and next Event
                     SharedPreferences.Editor editor = prefs.edit();
                     VEvent nextEvent = events.peek();
-                    editor.putLong(SettingKeys.ICS.NEXT_EVENT_START + "_" + id,
+                    editor.putLong(SettingKeys.GenericSchedule.NEXT_EVENT_START + "_" + id,
                             nextEvent.getStartDate().getDate().getTime());
-                    editor.putLong(SettingKeys.ICS.NEXT_EVENT_END + "_" + id,
+                    editor.putLong(SettingKeys.GenericSchedule.NEXT_EVENT_END + "_" + id,
                             nextEvent.getEndDate().getDate().getTime());
-                    editor.putString(SettingKeys.ICS.NEXT_EVENT_REASON + "_" + id,
+                    editor.putString(SettingKeys.GenericSchedule.NEXT_EVENT_REASON + "_" + id,
                             nextEvent.getSummary().getValue());
                     //save only future events
                     ComponentList<CalendarComponent> futureEvents = new ComponentList();
                     futureEvents.addAll(eventsList);
                     calendar = new Calendar(futureEvents);
-                    editor.putString(SettingKeys.ICS.ICAL + "_" + id, calendar.toString());
+                    editor.putString(SettingKeys.GenericSchedule.ICAL + "_" + id,
+                            calendar.toString());
                     editor.commit();
                 }
             } catch (IOException e) {
@@ -322,30 +323,21 @@ public class MutePhoneService extends Service {
         return hasScheduleBasedRule;
     }
 
-//    private boolean needsWifi() {
-//        boolean needsWifi = hasWifiRule();
-//        Iterator<String> it = prefIDs.iterator();
-//        while (it.hasNext() && !needsWifi) {
-//            String id = it.next();
-//            hasScheduleBasedRule = isScheduleBasedRule(prefs, id);
-//        }
-//        return needsWifi;
-//    }
-
     private void maybeSyncSchedules() {
+        long now = (new Date()).getTime();
         for (String id : prefIDs) {
-            long lastSync = 0;
-            long now = (new Date()).getTime();
+            long lastSync = prefs.getLong(SettingKeys.GenericSchedule.LAST_SYNC + "_" + id, 0);
+            ;
             switch (PreferenceHelper.getRuleType(prefs, id)) {
                 case ICS:
-                    lastSync = prefs.getLong(SettingKeys.ICS.LAST_SYNC + "_" + id, 0);
                     if (now - lastSync > CALENDAR_SYNC_INTERVAL * 60 * 1000) {
                         (new ICSScheduleSync(this)).execute();
-                        //TODO: Set lastsync to now.
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putLong(SettingKeys.ICS.LAST_SYNC + "_" + id, now);
+                        editor.commit();
                     }
                     break;
                 case KUSSS:
-                    lastSync = prefs.getLong(SettingKeys.Kusss.LAST_SYNC + "_" + id, 0);
                     if (now - lastSync > KUSS_SYNC_INTERVAL * 60 * 1000) {
                         (new KusssScheduleSync(this)).execute();
                         SharedPreferences.Editor editor = prefs.edit();
@@ -354,12 +346,15 @@ public class MutePhoneService extends Service {
                     }
                     break;
                 case WEBUNTIS:
-//                    lastSync = prefs.getLong(SettingKeys.WebUntis.LAST_SYNC + "_" + id, 0);
-//                    if (now - lastSync > WEBUNTIS_SYNC_INTERVAL * 60 * 1000) {
-//                        (new WebUntisScheduleSync(this)).execute(new String[0]);
-                    ////TODO: Set lastsync to now.
-//                    }
+                    if (now - lastSync > WEBUNTIS_SYNC_INTERVAL * 60 * 1000) {
+                        (new WebUntisScheduleSync(this)).execute(new String[0]);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putLong(SettingKeys.WebUntis.LAST_SYNC + "_" + id, now);
+                        editor.commit();
+
+                    }
                     break;
+
             }
         }
     }
@@ -402,12 +397,14 @@ public class MutePhoneService extends Service {
                         if (SSIDs.contains(wifi)) {
                             reason = nextEventSummary;
                             mute = true;
-                            muteUntilEventEnd(SettingKeys.GenericSchedule.SOUND_PROFILE + "_" + id, nextEventEnd);
+                            muteUntilEventEnd(SettingKeys.GenericSchedule.SOUND_PROFILE + "_" + id,
+                                    nextEventEnd);
                         }
                     } else {
                         reason = nextEventSummary;
                         mute = true;
-                        muteUntilEventEnd(SettingKeys.GenericSchedule.SOUND_PROFILE + "_" + id, nextEventEnd);
+                        muteUntilEventEnd(SettingKeys.GenericSchedule.SOUND_PROFILE + "_" + id,
+                                nextEventEnd);
                     }
                 }
             }
@@ -444,8 +441,7 @@ public class MutePhoneService extends Service {
         if (isConnectedToWifi()) {
             String currentSSID = wifiManager.getConnectionInfo().getSSID();
 
-            // first found Rule takes precedence -> should we have a way to sort rules?
-            // or better -> Rules based on Scheduled Classes take precedence! -> TODO
+            // first found Wifi Rule takes precedence but Rules based on Scheduled Classes take precedence!
             for (String id : prefIDs) {
                 if (PreferenceHelper.getRuleType(prefs, id) == SettingKeys.SettingType.WIFI &&
                         prefs.getBoolean(SettingKeys.Wifi.ENABLE + "_" + id, true) &&

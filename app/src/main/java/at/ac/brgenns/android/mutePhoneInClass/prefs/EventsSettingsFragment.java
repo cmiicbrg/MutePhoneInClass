@@ -58,7 +58,6 @@ public class EventsSettingsFragment extends PreferenceFragment
         pEnable.setDefaultValue(true);
         pEnable.setOnPreferenceChangeListener(this);
         root.addPreference(pEnable);
-        // TODO final Preference pDisableFor... if disabled it should be possible to set for how long
 
         pDisableFor = new DurationPickerPreference(getActivity(), null);
 
@@ -127,9 +126,11 @@ public class EventsSettingsFragment extends PreferenceFragment
                     break;
                 case ICS:
                     p.setIcon(R.drawable.ic_account_black_24dp);
-                    p.setTitle(getString(R.string.ics) + " - " +
-                            prefs.getString(SettingKeys.ICS.ICS_URL + "_" + id, "")
-                                    .substring(0, 25));
+                    String titleString = prefs.getString(SettingKeys.ICS.ICS_URL + "_" + id, "");
+                    if (titleString.length() > 25) {
+                        titleString = titleString.substring(0, 25);
+                    }
+                    p.setTitle(getString(R.string.ics) + " - " + titleString);
                     p.setSummary(prefs.getString(SettingKeys.Wifi.SSID + "_" + id,
                             getString(R.string.ignore_wifi)) + ", " + soundProfileName);
                     p.setPersistent(false);
@@ -145,7 +146,24 @@ public class EventsSettingsFragment extends PreferenceFragment
                     rules.addPreference(p);
                     break;
                 case WEBUNTIS:
-                    //TODO
+                    p.setIcon(R.drawable.ic_account_black_24dp);
+                    p.setTitle("WebUntis - " +
+                            prefs.getString(SettingKeys.WebUntis.USER + "_" + id, ""));
+                    p.setSummary(prefs.getString(SettingKeys.GenericSchedule.SSID + "_" + id,
+                            getString(R.string.ignore_wifi)) + ", " + soundProfileName);
+                    p.setPersistent(false);
+                    p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                        @Override
+                        public boolean onPreferenceClick(Preference preference) {
+                            Intent intent =
+                                    new Intent(getActivity(), WebUntisSettingsActivity.class);
+                            intent.putExtra(MuteSettingsActivity.SETTING_ID, id);
+                            startActivity(intent);
+                            return true;
+                        }
+                    });
+                    rules.addPreference(p);
+                    break;
             }
 
         }

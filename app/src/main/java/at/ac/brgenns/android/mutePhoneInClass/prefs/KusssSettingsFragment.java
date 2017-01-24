@@ -33,8 +33,7 @@ public class KusssSettingsFragment extends SettingsFragment {
 
         root.addPreference(getEnablePreference(SettingKeys.Kusss.ENABLE));
         root.addPreference(getUsernamePasswordPreference());
-        root.addPreference(getEnableWifiPreference(getString(R.string.mute_only_on_wifi),
-                SettingKeys.Wifi.SSID));
+        root.addPreference(getEnableWifiPreference(getString(R.string.mute_only_on_wifi)));
         root.addPreference(getSSIDChooserPreference());
         root.addPreference(getSoundProfilePreference());
 
