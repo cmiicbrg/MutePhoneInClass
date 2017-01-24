@@ -9,14 +9,9 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
-import net.fortuna.ical4j.filter.Filter;
-import net.fortuna.ical4j.filter.PeriodRule;
 import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.Component;
-import net.fortuna.ical4j.model.Date;
-import net.fortuna.ical4j.model.DateTime;
-import net.fortuna.ical4j.model.Dur;
-import net.fortuna.ical4j.model.Period;
+import net.fortuna.ical4j.model.ComponentList;
+import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.component.VEvent;
 
 import java.io.BufferedReader;
@@ -35,14 +30,15 @@ import java.net.CookiePolicy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Set;
 
 import at.ac.brgenns.android.mutePhoneInClass.prefs.SettingKeys;
+
+import static at.ac.brgenns.android.mutePhoneInClass.ICSScheduleSync.getFilteredvEvents;
+import static at.ac.brgenns.android.mutePhoneInClass.ICSScheduleSync.getSortedvEvents;
 
 /**
  * Created by Christoph on 02.01.2017.
@@ -102,7 +98,6 @@ public class KusssScheduleSync extends AsyncTask<String, Void, Void> {
                 userName =
                         prefs.getString(SettingKeys.Kusss.USER + "_" + id, "");
                 if (!userName.isEmpty()) {
-                    //TODO: this is just for testing connectivity -> should use another Service with it's own AlarmManager
                     final String finalUserName = userName;
                     Account account = new Account(finalUserName,
                             AccountAuthenticatorService.AUTH_TYPE);
@@ -115,35 +110,25 @@ public class KusssScheduleSync extends AsyncTask<String, Void, Void> {
                         if (password.length() > 0) {
                             try {
                                 Calendar calendar = getCalendar(finalUserName, password);
-                                Period period =
-                                        new Period(new DateTime(
-                                                java.util.Calendar.getInstance().getTime()),
-                                                new Dur(52));
-                                PeriodRule[] rules = {new PeriodRule(period)};
-                                Filter filter = new Filter(rules, Filter.MATCH_ANY);
-                                Collection<VEvent> eventsList =
-                                        filter.filter(calendar.getComponents(Component.VEVENT));
-                                PriorityQueue<VEvent> events = new PriorityQueue<>(200,
-                                        new Comparator<VEvent>() {
-                                            @Override
-                                            public int compare(VEvent e1, VEvent e2) {
-                                                Date d1 = e1.getStartDate().getDate();
-                                                Date d2 = e2.getStartDate().getDate();
-                                                return d1.compareTo(d2);
-                                            }
-                                        });
-                                for (VEvent event : eventsList) {
-                                    events.add(
-                                            event); // with addAll the result seems not to be sorted
-                                }
-                                while (!events.isEmpty()) {
-                                    VEvent event = events.poll();
-                                    SimpleDateFormat formatDate =
-                                            new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                                    Date date = event.getStartDate().getDate();
-                                    Log.d(TAG,
-                                            formatDate.format(date) + " " +
-                                                    event.getSummary().getValue());
+                                Collection<VEvent> eventsList = getFilteredvEvents(calendar);
+                                if (!eventsList.isEmpty()) {
+                                    PriorityQueue<VEvent> events = getSortedvEvents(eventsList);
+
+                                    // Save calendar and next Event
+                                    SharedPreferences.Editor editor = prefs.edit();
+                                    VEvent nextEvent = events.peek();
+                                    editor.putLong(SettingKeys.Kusss.NEXT_EVENT_START + "_" + id,
+                                            nextEvent.getStartDate().getDate().getTime());
+                                    editor.putLong(SettingKeys.Kusss.NEXT_EVENT_END + "_" + id,
+                                            nextEvent.getEndDate().getDate().getTime());
+                                    editor.putString(SettingKeys.Kusss.NEXT_EVENT_REASON + "_" + id,
+                                            nextEvent.getSummary().getValue());
+                                    //save only future events
+                                    ComponentList<CalendarComponent> futureEvents = new ComponentList();
+                                    futureEvents.addAll(eventsList);
+                                    calendar = new Calendar(futureEvents);
+                                    editor.putString(SettingKeys.Kusss.ICAL + "_" + id, calendar.toString());
+                                    editor.commit();
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();

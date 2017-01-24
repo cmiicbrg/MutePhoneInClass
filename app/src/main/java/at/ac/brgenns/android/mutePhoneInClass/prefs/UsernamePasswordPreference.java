@@ -69,7 +69,6 @@ public class UsernamePasswordPreference extends DialogPreference {
             }
         }
         Intent mutePhoneService = new Intent(this.getContext(), MutePhoneService.class);
-        mutePhoneService.putExtra(MutePhoneService.TASK, MutePhoneService.KUSS_ACCOUNT);
         this.getContext().startService(mutePhoneService);
     }
 

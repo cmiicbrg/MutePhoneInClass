@@ -348,12 +348,16 @@ public class MutePhoneService extends Service {
                     lastSync = prefs.getLong(SettingKeys.Kusss.LAST_SYNC + "_" + id, 0);
                     if (now - lastSync > KUSS_SYNC_INTERVAL * 60 * 1000) {
                         (new KusssScheduleSync(this)).execute();
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putLong(SettingKeys.Kusss.LAST_SYNC + "_" + id, now);
+                        editor.commit();
                     }
                     break;
                 case WEBUNTIS:
 //                    lastSync = prefs.getLong(SettingKeys.WebUntis.LAST_SYNC + "_" + id, 0);
 //                    if (now - lastSync > WEBUNTIS_SYNC_INTERVAL * 60 * 1000) {
 //                        (new WebUntisScheduleSync(this)).execute(new String[0]);
+                    ////TODO: Set lastsync to now.
 //                    }
                     break;
             }

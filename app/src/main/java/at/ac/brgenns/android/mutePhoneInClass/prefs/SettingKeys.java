@@ -65,7 +65,7 @@ public class SettingKeys {
         SERVER_URL,
         SCHOOL_NAME,
         CLASS_NAME,
-        WEBUNTIS_USER,
+        USER,
         LAST_SYNC,
         SSID,
         SOUND_PROFILE,

@@ -37,6 +37,9 @@ public class KusssSettingsFragment extends SettingsFragment {
                 SettingKeys.Wifi.SSID));
         root.addPreference(getSSIDChooserPreference());
         root.addPreference(getSoundProfilePreference());
+
+        addNextEventPreference(root);
+
         PreferenceHelper.addID(getActivity(), id);
     }
 
@@ -54,35 +57,6 @@ public class KusssSettingsFragment extends SettingsFragment {
         PreferenceHelper.bindPreferenceSummaryToValue(usernamePassword);
 
         return usernamePassword;
-    }
-
-    private SwitchPreference getEnableWifiPreference(String title,
-                                                     final SettingKeys.Wifi key) {
-        SwitchPreference enable = new SwitchPreference(getActivity());
-        enable.setPersistent(false);
-        enable.setKey("ENABLE_" + key + "_" + id);
-        enable.setTitle(title);
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        boolean defaultValue = prefs.getString(key + "_" + id, "") != "";
-        enable.setDefaultValue(defaultValue);
-        enable.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                if (newValue instanceof Boolean) {
-                    boolean newBool = ((Boolean) newValue).booleanValue();
-                    ListPreference p = (ListPreference) findPreference(key + "_" + id);
-                    p.setEnabled(newBool);
-                    if (newBool) {
-                        p.setSummary(getString(R.string.choose_wifi));
-                    } else {
-                        p.setSummary("");
-                        prefs.edit().remove(key + "_" + id).commit();
-                    }
-                }
-                return true;
-            }
-        });
-        return enable;
     }
 
 }

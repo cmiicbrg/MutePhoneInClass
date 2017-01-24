@@ -33,4 +33,6 @@ dependencies {
     compile 'com.pavelsikun:material-seekbar-preference:2.3.0'
     //    compile 'com.android.support:support-v4:24.0.0'
     compile 'org.mnode.ical4j:ical4j:2.0.0'
+    compile 'com.thetransactioncompany:jsonrpc2-base:1.38'
+    compile 'com.thetransactioncompany:jsonrpc2-client:1.16.4'
 }
