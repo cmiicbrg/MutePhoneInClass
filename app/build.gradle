@@ -1,22 +1,23 @@
 apply plugin: 'com.android.application'
 
 android {
+
     compileSdkVersion 23
     buildToolsVersion "23.0.3"
-
     defaultConfig {
         applicationId "at.ac.brgenns.android.mutePhoneInClass"
         minSdkVersion 17
         targetSdkVersion 23
-        versionCode 1
-        versionName "0.5 alpha"
-        multiDexEnabled  true
+        versionCode 4
+        versionName "0.9 beta"
+        multiDexEnabled true
     }
-
     buildTypes {
         release {
-            shrinkResources true
-            minifyEnabled true
+            shrinkResources false
+            minifyEnabled false
+            zipAlignEnabled true
+            debuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
